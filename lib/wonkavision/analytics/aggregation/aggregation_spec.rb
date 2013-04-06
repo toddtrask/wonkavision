@@ -1,0 +1,71 @@
+module Wonkavision
+  module Analytics
+    module Aggregation
+      class AggregationSpec
+
+        attr_reader :name, :calculated_measures, :filter
+        attr_reader :dimensions, :measures
+        def initialize(name)
+          @name = name
+          #count is the default measure of an aggregation
+          @measures = HashWithIndifferentAccess.new(:count => {})
+          @calculated_measures = HashWithIndifferentAccess.new
+          @dimensions = HashWithIndifferentAccess.new
+        end
+
+        def measure_names
+          @measures.keys
+        end
+
+        def dimension(*dimension_names,&block)
+          options = dimension_names.extract_options! || {}
+          dimension_names.flatten.each do |dim|
+            @dimensions[dim] = Dimension.new(dim,options,&block)
+          end
+        end
+
+        def measure(*measure_list)
+          options = measure_list.extract_options! || {}
+          measure_list.flatten.each { |m| self.measures[m] = options }
+        end
+
+        def average(*measure_list)
+          measure_list.add_options! :default_component=>:average
+          measure(*measure_list)
+        end
+        alias :mean :average
+
+        def count(*measure_list)
+          measure_list.add_options! :default_component=>:count
+          measure(*measure_list)
+        end
+
+        def sum(*measure_list)
+          measure_list.add_options! :default_component=>:sum
+          measure(*measure_list)
+        end
+
+        def calc(measure_name,options={},&block)
+          options[:calculation] = block
+          calculated_measures[measure_name] = options
+        end
+        alias calculate calc
+     
+        def filter(&block)
+          return @filter unless block
+          @filter = block
+        end
+
+        def matches(message)
+          return true unless filter
+          case filter.arity
+          when 0 then filter.call
+          else filter.call(message)
+          end
+        end
+
+      end
+    end
+  end
+
+end
