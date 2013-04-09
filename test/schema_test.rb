@@ -21,6 +21,29 @@ class SchemaTest < ActiveSupport::TestCase
       assert RevenueAnalytics.store.kind_of?(Wonkavision::Analytics::Persistence::ActiveRecordStore)
       assert_equal RevenueAnalytics, RevenueAnalytics.store.schema
     end
+
+    context "execute_query" do
+      setup do
+        test_data = File.join $test_dir, "queryresults.tuples"
+        @test_data = eval(File.read(test_data))
+        @query = Wonkavision::Analytics::Query.new
+        @query.from(:transport)
+        @query.columns :account_age_from_dos
+        @query.rows :primary_payer_type, :primary_payer
+        @query.measures :current_balance
+        @query.where :division => 1, :provider.caption => 'REACH', :measures.current_balance.gt => 0
+
+        RevenueAnalytics.store.expects(:execute_query).with(@query).returns(@test_data)
+      end
+      should "execute the query and return a cellset" do
+        result = RevenueAnalytics.execute_query(@query)
+        assert result.is_a?(Wonkavision::Analytics::CellSet)
+      end
+      should "return raw data when raw is requested" do
+        result = RevenueAnalytics.execute_query(@query, :raw => true)
+        assert result.is_a?(Array)
+      end
+    end
     
   end
 end

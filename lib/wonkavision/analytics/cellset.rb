@@ -106,7 +106,6 @@ module Wonkavision
       def process_tuples(tuples)
         dims = {}
         tuples.each do |record|
-          next unless query.matches_filter?(cube, record)
           update_cell( record )
           @dimensions.each do |d|
             dimdata = dimension_from_row(d, record)
@@ -121,7 +120,7 @@ module Wonkavision
       def key_for(record)
         key = []
         @dimensions.each do |dim|
-          key << record["#{dim.dimension.name}_key"]
+          key << record["#{dim.dimension.name}__key"]
         end
         key
       end
@@ -143,14 +142,14 @@ module Wonkavision
 
       def measure_fields(measure_name, record)
         @measure_fields[measure_name] ||= begin
-          prefix = /^#{measure_name}_/i
+          prefix = /^#{measure_name}__/i
           record.keys.select{|rfield| rfield =~ prefix}
         end
       end
 
       def dimension_fields(dimension_name, record)
         @dimension_fields[dimension_name] ||= begin
-          prefix = /^#{dimension_name}_/i
+          prefix = /^#{dimension_name}__/i
           record.keys.select{|dfield| dfield =~ prefix}
         end
       end
@@ -160,7 +159,7 @@ module Wonkavision
         selected_measures.each do |measure_name|
           measure = {}
           measure_fields(measure_name, record).each do |measure_field|
-            component_name = measure_field[measure_name.to_s.length+1..-1]
+            component_name = measure_field[measure_name.to_s.length+2..-1]
             measure[component_name] = record[measure_field]
           end
           measures[measure_name.to_s] = measure unless measure.blank?
@@ -171,7 +170,7 @@ module Wonkavision
       def dimension_from_row(dimension, record)
         dim = {}
         dimension_fields(dimension.name, record).each do |dimension_field|
-          attribute_name = dimension_field[dimension.name.to_s.length+1..-1]
+          attribute_name = dimension_field[dimension.name.to_s.length+2..-1]
           dim[attribute_name.to_s] = record[dimension_field]
         end
         dim

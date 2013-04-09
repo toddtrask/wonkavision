@@ -4,7 +4,7 @@ module Wonkavision
   module Analytics
     module Persistence
       class ActiveRecordStore < Store
-        
+
         class << self
 
           attr_reader :db, :arel_engine
@@ -58,7 +58,7 @@ module Wonkavision
           selected_dims.each{|d|join_dimension(d, cubetable, sql)}
           slicer_dims.each{|d|join_dimension(d, cubetable, sql, false)}
           selected_measures.each{|m| project_measure(m, cubetable, sql) }
-          sql.project(Arel.sql('*').count.as('record_count'))
+          sql.project(Arel.sql('*').count.as('record__count'))
           
           query.filters.each do |f|
             apply_filter(f, cube, sql)
@@ -99,10 +99,10 @@ module Wonkavision
         def project_measure(measure, table, sql)
           mattr = table[measure.name]
           sql.project(
-            mattr.count.as("#{measure.name}_count"),
-            mattr.sum.as("#{measure.name}_sum"),
-            mattr.minimum.as("#{measure.name}_min"),
-            mattr.maximum.as("#{measure.name}_max")
+            mattr.count.as("#{measure.name}__count"),
+            mattr.sum.as("#{measure.name}__sum"),
+            mattr.minimum.as("#{measure.name}__min"),
+            mattr.maximum.as("#{measure.name}__max")
           )
         end
 
@@ -117,21 +117,21 @@ module Wonkavision
             fkey.eq pkey
           )
           sql.project(
-            dimkey.as("#{cube_dimension.name}_key"),
+            dimkey.as("#{cube_dimension.name}__key"),
             #prefix(fkey, cube_dimension.name),
-            caption.as("#{cube_dimension.name}_caption")
+            caption.as("#{cube_dimension.name}__caption")
             #prefix(caption, cube_dimension.name)
           ).group(dimkey, caption) if project
 
           if sort_key = cube_dimension.dimension.sort
             sort = dimtable[sort_key].minimum
-            sql.project(sort.as("#{cube_dimension.name}_sort")).order("#{cube_dimension.name}_sort")
+            sql.project(sort.as("#{cube_dimension.name}__sort")).order("#{cube_dimension.name}__sort")
           end
         end
 
-        def prefix(name, prefix)
-          attribute.as("#{prefix}_#{name}")
-        end
+        # def prefix(name, prefix)
+        #   attribute.as("#{prefix}_#{name}")
+        # end
 
         def filter_op_to_arel_op(filter_op)
           case filter_op

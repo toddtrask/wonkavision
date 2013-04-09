@@ -104,40 +104,6 @@ module Wonkavision
         self
       end
 
-      def matches(cube, tuple)
-        #this check allows the database adapter to apply a filter at the db query level
-        #Wonkavision will avoid the overhead of checking again if the store signals it has taken care of things
-        return true if @applied || tuple.blank?
-
-        assert_operator_matches_value
-
-        matches_value extract_attribute_value_from_tuple(cube, tuple)
-      end
-
-      def matches_value(data)
-        case operator
-        when :gt then data ? data > value : false
-        when :lt then data ? data < value : false
-        when :gte then data ? data >= value : false
-        when :lte then data ? data <= value : false
-        when :in then
-          if data.kind_of?(Array)
-            (value | data).length == value.length
-          else
-            value.include?(data)
-          end
-        when :nin then
-          if data.kind_of?(Array)
-            value & data == []
-          else
-            !value.include?(data)
-          end
-        when :ne then data != value
-        when :eq then value == data
-        else raise "Unknown filter operator #{operator}"
-        end
-      end
-
       def validate!(cube)
         !! dimension? ? cube.dimensions[name] : cube.measures[name]
       end
@@ -159,27 +125,7 @@ module Wonkavision
         parts = base.split(/\s*,\s*/)
         parts.map { |p| parse_value(p) }
       end
-
-      # TODO: This is smelly - we should have a Tuple class that knows its aggregation
-      # and can return this kind of information on demand - it is dirty business
-      # that a filter class has to know the about the anatomy of a tuple to do its
-      # job
-      def extract_attribute_value_from_tuple(cube,tuple)
-        #val_key = dimension? ? cube.dimensions[name].attribute_key(attribute_name) : attribute_name
-        val_key = "#{name}_#{attribute_name}"
-        tuple[val_key.to_s]
-      end
-
-      def assert_operator_matches_value
-
-        case operator
-        when :gt, :lt, :gte, :lte then
-          raise "A filter value is required for #{operator}" unless value
-        when :in, :nin then
-          raise "A filter value is required for #{operator}" unless value
-          raise "The filter value for #{operator} must respond to :include?" unless value.respond_to?(:include?)
-        end
-      end
+  
 
     end
   end

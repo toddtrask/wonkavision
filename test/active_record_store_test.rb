@@ -38,24 +38,24 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           should "project selected dimension keys and names" do
             selected_keys = @projections.select{|n|n.is_a?(Arel::Nodes::As)}
             assert_equal 6, selected_keys.length
-            assert selected_keys.detect{|n|n.right == "account_age_from_dos_key"}, "no age key"
-            assert selected_keys.detect{|n|n.right == "account_age_from_dos_caption"}, "no age name"  
-            assert selected_keys.detect{|n|n.right == "primary_payer_type_key"}, "no payer type key" 
-            assert selected_keys.detect{|n|n.right == "primary_payer_type_caption"}, "no payer type name"  
-            assert selected_keys.detect{|n|n.right == "primary_payer_key"}, "no payer key" 
-            assert selected_keys.detect{|n|n.right == "primary_payer_caption"}, "no payer name"          
+            assert selected_keys.detect{|n|n.right == "account_age_from_dos__key"}, "no age key"
+            assert selected_keys.detect{|n|n.right == "account_age_from_dos__caption"}, "no age name"  
+            assert selected_keys.detect{|n|n.right == "primary_payer_type__key"}, "no payer type key" 
+            assert selected_keys.detect{|n|n.right == "primary_payer_type__caption"}, "no payer type name"  
+            assert selected_keys.detect{|n|n.right == "primary_payer__key"}, "no payer key" 
+            assert selected_keys.detect{|n|n.right == "primary_payer__caption"}, "no payer name"          
           end
           should "project measures" do
             selected_measures = @projections.select{|n|!n.is_a?(Arel::Nodes::As)}
-            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Sum) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance_sum"}, "sum"
-            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Count) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance_count"}, "count"
-            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Min) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance_min"}, "min"
-            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Max) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance_max"}, "max"
+            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Sum) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance__sum"}, "sum"
+            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Count) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance__count"}, "count"
+            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Min) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance__min"}, "min"
+            assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Max) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance__max"}, "max"
           end
           should "project sorts" do
             selected_sorts = @projections.select{|n|n.is_a?(Arel::Nodes::Min) && n.alias =~ /.*_sort/ }
-            assert selected_sorts.detect{|s|s.alias == "primary_payer_sort"}, "primary_payer"
-            assert selected_sorts.detect{|s|s.alias == "account_age_from_dos_sort"}, "account age"
+            assert selected_sorts.detect{|s|s.alias == "primary_payer__sort"}, "primary_payer"
+            assert selected_sorts.detect{|s|s.alias == "account_age_from_dos__sort"}, "account age"
           end
           should "join selected dimensions" do
             assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_aging_category" && join.left.right.to_s == "account_age_from_dos"}, "account age"

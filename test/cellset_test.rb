@@ -10,36 +10,14 @@ class CellSetTest < ActiveSupport::TestCase
   @@test_data = eval(File.read(test_data))
 
   context "CellSet" do
-    context "a filtered query" do
-      setup do
-        @schema = CellsetSchema
-        @query = Wonkavision::Analytics::Query.new
-        @query.from :test
-        @query.columns :size, :shape
-        @query.where :dimensions.color => "black"
-        @query.measures :cost, :weight
-        @query.validate!(CellsetSchema)
-        @cellset = CellSet.new @schema, @query, @@test_data
-      end
-      should "properly aggregate leaf cells" do
-        assert_equal 20, @cellset[:small, :square].cost.count
-      end
-      should "properly aggregate totals cells" do
-        assert_equal 20, @cellset[:small].cost.count
-      end
-      should "properly aggregate the grand total" do
-        assert_equal 20, @cellset.totals.cost.count
-      end
-    end
-
-    context "unfiltered queries" do
+    
+    context "queries" do
       setup do
         @schema = CellsetSchema
         @query = Wonkavision::Analytics::Query.new
         @query.from :test
         @query.select :size, :shape, :on => :columns
         @query.select :color, :on => :rows
-        @query.where  :dimensions.color.ne => "black"
         @query.measures :cost, :weight
         @query.validate!(@schema)
         @cellset = CellSet.new @schema, @query, @@test_data
@@ -61,7 +39,7 @@ class CellSetTest < ActiveSupport::TestCase
 
 
           should "calculate a grand total" do
-            assert_equal 90, @cellset.totals.cost.count
+            assert_equal 110, @cellset.totals.cost.count
           end
 
           should "maintain a list of measure names used" do
@@ -151,7 +129,7 @@ class CellSetTest < ActiveSupport::TestCase
         context "#key_for" do
           setup do
             @record = {
-              "color_key"=>"yellow","shape_key"=>"square","size_key"=>"small"
+              "color__key"=>"yellow","shape__key"=>"square","size__key"=>"small"
             }
           end
           should "re-order the dimension_keys array to match query order" do
@@ -213,12 +191,11 @@ class CellSetTest < ActiveSupport::TestCase
                     @query.measures :cost, :weight
                     @query.select :size, :on => :columns
                     @query.select :shape, :color, :on => :rows
-                    @query.where  :dimensions.color.ne => "black"
                     @query.validate!(@schema)
                     @cellset = CellSet.new @schema, @query, @@test_data
                   end
                   should "work for axes > 0" do
-                    assert_equal 2, @cellset.rows[:square].descendent_count
+                    assert_equal 3, @cellset.rows[:square].descendent_count
                   end
                 end
               end
@@ -488,6 +465,23 @@ class CellSetTest < ActiveSupport::TestCase
               should "exclude formatted value when requested" do
                 hash = @measure.serializable_hash(:format_measures => false)
                 assert hash.keys.include?("formatted_value") != true
+              end
+            end
+
+            context "real data" do
+              setup do
+                test_data2 = File.join $test_dir, "queryresults.tuples"
+                @test_data2 = eval(File.read(test_data))
+                @query2 = Wonkavision::Analytics::Query.new
+                @query2.from(:transport)
+                @query2.columns :account_age_from_dos
+                @query2.rows :primary_payer_type, :primary_payer
+                @query2.measures :current_balance
+                @query2.where :division => 1, :provider.caption => 'REACH', :measures.current_balance.gt => 0
+                @cellset = CellSet.new(RevenueAnalytics, @query2, @test_data2)
+              end
+              should "prep a cellset based on the data" do
+                puts @cellset.inspect
               end
             end
 

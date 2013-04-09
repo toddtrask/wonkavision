@@ -24,9 +24,10 @@ module Wonkavision
           cubes[name] = Cube.new(self, name,options,&block)
         end
 
-        def execute_query(query)
+        def execute_query(query, options = {})
           query.validate!(self)
-          store.execute_query(query)
+          tuples = store.execute_query(query)
+          options[:raw] ? tuples : Wonkavision::Analytics::CellSet.new(self, query, tuples)
         end
 
         def store(new_store=nil)
