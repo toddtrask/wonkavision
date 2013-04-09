@@ -13,6 +13,7 @@ dir = File.dirname(__FILE__)
  "extensions/symbol",
  "extensions/array",
  "extensions/date",
+ "api/helper",
  "analytics",
  "analytics/paginated",
  "analytics/member_filter",
