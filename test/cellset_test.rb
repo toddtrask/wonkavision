@@ -471,7 +471,7 @@ class CellSetTest < ActiveSupport::TestCase
             context "real data" do
               setup do
                 test_data2 = File.join $test_dir, "queryresults.tuples"
-                @test_data2 = eval(File.read(test_data))
+                @test_data2 = eval(File.read(test_data2))
                 @query2 = Wonkavision::Analytics::Query.new
                 @query2.from(:transport)
                 @query2.columns :account_age_from_dos
@@ -481,7 +481,7 @@ class CellSetTest < ActiveSupport::TestCase
                 @cellset = CellSet.new(RevenueAnalytics, @query2, @test_data2)
               end
               should "prep a cellset based on the data" do
-                puts @cellset.inspect
+                assert_equal 521, @cellset.length
               end
             end
 

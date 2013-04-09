@@ -26,7 +26,6 @@ module Wonkavision
         end
 
         calculate_totals
-
       end
 
       def columns; axes[0]; end
@@ -120,7 +119,7 @@ module Wonkavision
       def key_for(record)
         key = []
         @dimensions.each do |dim|
-          key << record["#{dim.dimension.name}__key"]
+          key << record["#{dim.name}__key"]
         end
         key
       end
