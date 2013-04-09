@@ -142,11 +142,6 @@ class QueryTest < ActiveSupport::TestCase
         @query.measures :tada
         assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
-      should "fail if no measure is specified" do
-        @query.from :transport
-        @query.columns :not_a_dimension
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
-      end
       should "fail if no dimension is specified" do
         @query.from :transport
         @query.measures :current_balance
