@@ -1,5 +1,5 @@
 require "test_helper"
-require File.join $test_dir, "test_aggregation.rb"
+require File.join $test_dir, "test_schema.rb"
 
 
 class CellSetTest < ActiveSupport::TestCase
@@ -12,12 +12,14 @@ class CellSetTest < ActiveSupport::TestCase
   context "CellSet" do
     context "a filtered query" do
       setup do
-        @aggregation = ::TestAggregation
+        @schema = CellsetSchema
         @query = Wonkavision::Analytics::Query.new
+        @query.from :test
         @query.columns :size, :shape
         @query.where :dimensions.color => "black"
         @query.measures :cost, :weight
-        @cellset = CellSet.new @aggregation, @query, @@test_data
+        @query.validate!(CellsetSchema)
+        @cellset = CellSet.new @schema, @query, @@test_data
       end
       should "properly aggregate leaf cells" do
         assert_equal 20, @cellset[:small, :square].cost.count
@@ -32,12 +34,15 @@ class CellSetTest < ActiveSupport::TestCase
 
     context "unfiltered queries" do
       setup do
-        @aggregation = ::TestAggregation
+        @schema = CellsetSchema
         @query = Wonkavision::Analytics::Query.new
+        @query.from :test
         @query.select :size, :shape, :on => :columns
         @query.select :color, :on => :rows
         @query.where  :dimensions.color.ne => "black"
-        @cellset = CellSet.new @aggregation, @query, @@test_data
+        @query.measures :cost, :weight
+        @query.validate!(@schema)
+        @cellset = CellSet.new @schema, @query, @@test_data
       end
 
       context "Public API" do
@@ -60,13 +65,10 @@ class CellSetTest < ActiveSupport::TestCase
           end
 
           should "maintain a list of measure names used" do
-            assert_equal [], ["cost","weight","cost_weight"] - @cellset.measure_names
+            assert_equal [], [:cost,:weight] - @cellset.selected_measures
           end
 
-          should "provide a list of selected meaures" do
-            assert_equal [:count], @cellset.selected_measures
-          end
-
+         
         end
         context "#[]" do
           should "locate a cell based on its coordinates, specified in query order" do
@@ -110,8 +112,8 @@ class CellSetTest < ActiveSupport::TestCase
         should "include totals" do
           assert_equal @cellset.totals.serializable_hash, @hash[:totals]
         end
-        should "include the aggregation name" do
-          assert_equal @cellset.aggregation.name, @hash[:aggregation]
+        should "include the cube name" do
+          assert_equal @cellset.cube.name, @hash[:cube]
         end
         should "include the query slicer and filters" do
           assert_equal @cellset.query.slicer.map{|f|f.to_s}, @hash[:slicer]
@@ -124,8 +126,6 @@ class CellSetTest < ActiveSupport::TestCase
             @dims = @cellset.send(:process_tuples, @@test_data)
           end
           context "processed cells" do
-
-
             should "be keyed by a query-ordered array of dimension keys" do
               test_key = @cellset.cells.keys.find { |key|key - ["red", "square", "large"] == []}
               assert_equal ["large", "square", "red"], test_key
@@ -139,19 +139,19 @@ class CellSetTest < ActiveSupport::TestCase
             should "provide a hash of members for the dimensions" do
               test_dim = @dims["color"]
               %w(red green yellow white).each do |mem_key| #black is filtered out
-                assert test_dim.keys.include?(mem_key)
+                assert test_dim.keys.include?(mem_key), mem_key
               end
             end
             should "include the dimension attributes in the member hash" do
               test_dim = @dims["color"]
-              assert_equal( { "color" => "red" }, test_dim["red"] )
+              assert_equal( { "key" => "red", "sort" => "red", "caption" => "red" }, test_dim["red"] )
             end
           end
         end
         context "#key_for" do
           setup do
             @record = {
-              "color_color"=>"yellow","shape_shape"=>"square","size_size"=>"small"
+              "color_key"=>"yellow","shape_key"=>"square","size_key"=>"small"
             }
           end
           should "re-order the dimension_keys array to match query order" do
@@ -207,11 +207,15 @@ class CellSetTest < ActiveSupport::TestCase
                 end
                 context "for an axis > 0" do
                   setup do
+                    @schema = CellsetSchema
                     @query = Wonkavision::Analytics::Query.new
+                    @query.from :test
+                    @query.measures :cost, :weight
                     @query.select :size, :on => :columns
                     @query.select :shape, :color, :on => :rows
                     @query.where  :dimensions.color.ne => "black"
-                    @cellset = CellSet.new @aggregation, @query, @@test_data
+                    @query.validate!(@schema)
+                    @cellset = CellSet.new @schema, @query, @@test_data
                   end
                   should "work for axes > 0" do
                     assert_equal 2, @cellset.rows[:square].descendent_count
@@ -239,7 +243,7 @@ class CellSetTest < ActiveSupport::TestCase
                 assert_equal "size", @dimension.name
               end
               should "extract its definition from the aggregation" do
-                assert_equal @aggregation.dimensions["size"], @dimension.definition
+                assert_equal @schema.cubes[:test].dimensions["size"], @dimension.definition
               end
               should "should contain a sorted list of members" do
                 %w(large medium small).each_with_index do |size,idx|
@@ -285,7 +289,7 @@ class CellSetTest < ActiveSupport::TestCase
               assert_equal "large", @member.sort
             end
             should "provide access to the raw attribute hash" do
-              assert_equal( { "size" => "large"}, @member.attributes )
+              assert_equal( { "key" => "large", "sort"=>"large", "caption" => "large"}, @member.attributes )
             end
             context "Serialization" do
               should "include the caption and no key if they match" do
@@ -316,29 +320,34 @@ class CellSetTest < ActiveSupport::TestCase
               assert_equal @cell.measures["cost"], @cell.cost
               assert_equal @cell.measures["weight"], @cell.weight
             end
-            should "provide named access to calculated measures" do
-              assert_equal @cell.cost.sum + @cell.weight.sum, @cell.cost_weight.value
-            end
+            # should "provide named access to calculated measures" do
+            #   assert_equal @cell.cost.sum + @cell.weight.sum, @cell.cost_weight.value
+            # end
             should "return an empty measure if no measure exists" do
               assert @cell.a_non_existent_member.empty?
             end
             should "be empty if all measures are empty" do
               @cell.cost.data["count"] = 0
               @cell.weight.data["count"] = 0
+              @cell.record.data["count"] = 0
               assert @cell.empty?
             end
             context "#aggregate" do
               setup do
-                @cell.aggregate({"cost"=>{ "count"=>1,"sum"=>1},
-                                  "different"=>{ "count"=>2,"sum"=>2}})
+                @cell.aggregate({"cost"=>{ "count"=>1,"sum"=>1, "min"=>1, "max"=>2},
+                                  "weight"=>{ "count"=>2,"sum"=>2, "min"=>3,"max"=>4}})
 
               end
               should "insert any new measures" do
-                assert @cell.measures.keys.include?("different")
+                assert @cell.measures.keys.include?("weight")
               end
               should "aggregate data from an existing measure" do
                 assert_equal 11, @cell.cost.count
                 assert_equal 51, @cell.cost.sum
+                assert_equal 1, @cell.cost.min
+                assert_equal 2, @cell.cost.max
+                assert_equal 1, @cell.weight.min
+                assert_equal 4, @cell.weight.max
               end
               should "maintain a reference to the dimensions represented by the cell" do
                 assert_equal [:size,:shape,:color], @cell.dimensions
@@ -383,9 +392,9 @@ class CellSetTest < ActiveSupport::TestCase
               should "include measures" do
                 assert_equal 3, @hash[:measures].length
               end
-              should "include calculated measures" do
-                assert @hash[:measures][2][:calculated]
-              end
+              # should "include calculated measures" do
+              #   assert @hash[:measures][2][:calculated]
+              # end
             end
           end
 
@@ -395,7 +404,7 @@ class CellSetTest < ActiveSupport::TestCase
               assert_equal "cost", @measure.name
             end
             should "provide access to the measure hash" do
-              assert_equal( {"count"=>10, "sum"=>50}, @measure.data )
+              assert_equal( {"count"=>10, "sum"=>50, "min"=>1, "max"=>1}, @measure.data )
             end
             should "provide named hash to measure values" do
               assert_equal 10, @measure.count
@@ -473,7 +482,7 @@ class CellSetTest < ActiveSupport::TestCase
               end
               should "include data and component when requested" do
                 hash = @measure.serializable_hash(:all_measure_components => true)
-                assert_equal( {"sum" => 10.0, "count" => 10}, hash[:data] )
+                assert_equal( {"sum" => 10.0, "count" => 10, "min" => 1, "max" => 1}, hash[:data] )
                 assert_equal :average, hash[:default_component]
               end
               should "exclude formatted value when requested" do

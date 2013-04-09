@@ -8,7 +8,7 @@ module Wonkavision
     end
 
     def self.default_store
-      @default_store ||= Wonkavision::Analytics::Persistence::HashStore
+      @default_store
     end
 
     def self.default_store=(store)

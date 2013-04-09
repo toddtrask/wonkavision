@@ -21,7 +21,7 @@ class DimensionTest < ActiveSupport::TestCase
 
       should "default the key sort and caption properties to name" do
         assert_equal "hi_key", @dimension.key.name
-        assert_equal "hi_key", @dimension.sort.name
+        assert_equal nil, @dimension.sort
         assert_equal "hi_name", @dimension.caption.name
       end
 
@@ -105,14 +105,11 @@ class DimensionTest < ActiveSupport::TestCase
         should "pass options to the created attribute" do
           assert_equal({ :option=>true }, @dimension.attributes[:s].options)
         end
-        should "return the key if no sort is defined" do
+        should "return nil if no sort defined" do
           @dimension.sort = nil
-          assert_equal @dimension.key, @dimension.sort
+          assert_equal nil, @dimension.sort
         end
-        should "not re-create a pre-existing attribute" do
-          @dimension.sort :s, :option=>false
-          assert_equal( { :option => true},  @dimension.attributes[:s].options )
-        end
+      
       end
 
       context "#caption" do
@@ -128,14 +125,11 @@ class DimensionTest < ActiveSupport::TestCase
         should "pass options to the created attribute" do
           assert_equal({ :option=>true }, @dimension.attributes[:c].options)
         end
-        should "return the key if no caption is defined" do
+        should "return nil if no caption is defined" do
           @dimension.caption = nil
-          assert_equal @dimension.key, @dimension.caption
+          assert_equal nil, @dimension.caption
         end
-        should "not re-create a pre-existing attribute" do
-          @dimension.caption :c, :option=>false
-          assert_equal( { :option => true},  @dimension.attributes[:c].options )
-        end
+       
       end
 
       context "#key" do
@@ -151,10 +145,7 @@ class DimensionTest < ActiveSupport::TestCase
         should "pass options to the created attribute" do
           assert_equal({ :option=>true }, @dimension.attributes[:k].options)
         end
-        should "not re-create a pre-existing attribute" do
-          @dimension.key :k, :option=>false
-          assert_equal( { :option => true},  @dimension.attributes[:k].options )
-        end
+      
       end
 
     end

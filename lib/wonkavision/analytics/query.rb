@@ -1,13 +1,19 @@
 module Wonkavision
   module Analytics
     class Query
-      attr_reader :axes, :filters
+      attr_reader :axes
 
       def initialize()
         @axes = []
-        @slicer = Set.new
         @filters = []
         @measures = []
+        @from = nil
+      end
+
+      def from(cube_name=nil)
+        return @from unless cube_name
+        @from = cube_name
+        self
       end
 
       def select(*dimensions)
@@ -36,19 +42,22 @@ module Wonkavision
         self
       end
 
+      def filters
+        (@filters + Wonkavision::Analytics.context.global_filters).compact.uniq
+      end
+
+
       def add_filter(member_filter)
         @filters << member_filter
-        @slicer << member_filter if member_filter.dimension? &&
-          !selected_dimensions.include?(member_filter.name)
         self
       end
 
       def slicer
-        @slicer.to_a
+        filters.select{|f|f.dimension?}.reject{|f|selected_dimensions.include?(f.name)}
       end
 
       def slicer_dimensions
-        @slicer.map{ |f|f.name }
+        slicer.map{ |f|f.name }
       end
 
       def referenced_dimensions
@@ -66,20 +75,22 @@ module Wonkavision
       end
 
       def selected_measures
-        @measures.blank? ? [:count] : @measures
+        @measures || []
       end
 
-      def matches_filter?(aggregation, tuple)
-        return true if all_filters_applied?
-        !( filters.detect{ |filter| !filter.matches(aggregation, tuple) } )
+      def matches_filter?(cube, tuple)
+        !( filters.detect{ |filter| !filter.matches(cube, tuple) } )
       end
 
-      def all_filters_applied?
-        @all_filters_applied ||= !(filters.detect{ |filter| !filter.applied? })
-      end
-
-      def validate!
+      def validate!(schema)
+        raise "You must specify a 'from' cube in your query" unless @from && cube = schema.cubes[@from]
         axes.each_with_index{|axis,index|raise "Axes must be selected from in consecutive order and contain at least one dimension. Axis #{index} is blank." if axis.blank?}
+        raise "No measures were selected" unless measures.length > 0
+        selected_measures.each{|measure_name|raise "The measure #{measure_name} cannot be found in #{cube.name}" unless cube.measures[measure_name]}
+        raise "No dimensions were selected" unless selected_dimensions.length > 0
+        selected_dimensions.each{|dim_name| raise "The dimension #{dim_name} cannot be found in #{cube}" unless cube.dimensions[dim_name]}
+        filters.each{|filter| raise "An filter referenced an invalid member:#{filter.to_s}" unless filter.validate!(cube)}
+        true
       end     
 
       def self.axis_ordinal(axis_def)

@@ -3,18 +3,13 @@ require "wonkavision/api/helper"
 
 class ApiHelperTest < ActiveSupport::TestCase
   setup do
-    @helper = Wonkavision::Api::Helper.new("Ns")
-  end
-
-  context "#constantize" do
-    should "prepend the namespace and constantize" do
-      assert_equal Ns::Aggregation, @helper.constantize("Aggregation")
-    end
+    @helper = Wonkavision::Api::Helper.new(RevenueAnalytics)
   end
 
   context "#query_from_params" do
     setup do
       @params = {
+        "from" => "transport",
         "columns" => "a|b",
         "rows" => "c|d ", 
         "pages" => ["e","f"],
@@ -25,6 +20,10 @@ class ApiHelperTest < ActiveSupport::TestCase
       }
       @query = @helper.query_from_params(@params)
 
+    end
+
+    should "set select the cube using the from param" do
+      assert_equal "transport", @query.from
     end
     
     should "extract dimensions into each named axis" do
@@ -65,11 +64,11 @@ class ApiHelperTest < ActiveSupport::TestCase
   context "execute_query" do
     setup do
       cs = stub(:serializable_hash => :hash)
-      @helper.expects(:query_from_params).with({:aggregation=>"Aggregation"}).returns(:hi)
-      Ns::Aggregation.expects(:execute_query).with(:hi).returns(cs)
+      @helper.expects(:query_from_params).with({:from=>"transport"}).returns(:hi)
+      RevenueAnalytics.expects(:execute_query).with(:hi).returns(cs)
     end
     should "prepare and execute the query defined in the params" do
-      assert_equal :hash, @helper.execute_query({:aggregation=>"Aggregation"})
+      assert_equal :hash, @helper.execute_query({:from=>"transport"})
     end
   end
 
@@ -79,13 +78,13 @@ class ApiHelperTest < ActiveSupport::TestCase
       class << result; include Wonkavision::Analytics::Paginated; end
 
       @helper.expects(:facts_query_from_params).
-        with(:aggregation=>"Aggregation").
-        returns([:hi,{:ho=>:sailor}])
-       Ns::Aggregation.expects(:facts_for).with(:hi,{:ho=>:sailor}).returns(result)
-       @response = @helper.facts_for({:aggregation=>"Aggregation"})
+        with(:from=>"transport").
+        returns([RevenueAnalytics.cubes[:transport], :hi,{:ho=>:sailor}])
+       RevenueAnalytics.cubes[:transport].expects(:facts_for).with(:hi,{:ho=>:sailor}).returns(result)
+       @response = @helper.facts_for({:from=>"transport"})
     end
-    should "set the facts class" do
-      assert_equal "TestFacts", @response[:facts_class]
+    should "set the cube name" do
+      assert_equal :transport, @response[:cube]
     end
     should "return the data" do
       assert_equal( {:some=>:data}, @response[:data] )
@@ -102,9 +101,10 @@ class ApiHelperTest < ActiveSupport::TestCase
         "filters" => [:dimensions.a.caption.eq(2).to_s, :measures.k.ne("b").to_s].join("|"),
         "page" => "2",
         "per_page" => "50",
-        "sort" => "a:1|b:-1"
+        "sort" => "a:1|b:-1",
+        "from" => "transport"
       }
-      @filters, @options = @helper.facts_query_from_params(@params)
+      @cube, @filters, @options = @helper.facts_query_from_params(@params)
     end
     should "extract each filter" do
       assert_equal 2, @filters.length

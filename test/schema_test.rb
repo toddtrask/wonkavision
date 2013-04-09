@@ -17,6 +17,10 @@ class SchemaTest < ActiveSupport::TestCase
       assert RevenueAnalytics.cubes.values[0].is_a?(Wonkavision::Analytics::Schema::Cube)
     end
 
+    should "set the specified storage" do
+      assert RevenueAnalytics.store.kind_of?(Wonkavision::Analytics::Persistence::ActiveRecordStore)
+      assert_equal RevenueAnalytics, RevenueAnalytics.store.schema
+    end
     
   end
 end

@@ -3,19 +3,17 @@ module Wonkavision
     class Helper
 
       LIST_DELIMITER = "|"
+
+      attr_reader :schema
       
-      def initialize(namespace=nil)
-        @namespace = namespace
+      def initialize(schema)
+        @schema = schema
       end
 
-      def constantize(name)
-        class_name = @namespace ? "#{@namespace}::#{name}" : name
-        class_name.constantize
-      end
-      
       def query_from_params(params)
         query = Wonkavision::Analytics::Query.new
 
+        query.from(params["from"])
         #dimensions
         ["columns","rows","pages","chapters","sections"].each do |axis|
           if dimensions = parse_list(params[axis])
@@ -36,17 +34,15 @@ module Wonkavision
       end
 
       def execute_query(params)
-        aggregation = constantize(params[:aggregation])
         query = query_from_params(params)
-        aggregation.execute_query(query).serializable_hash
+        schema.execute_query(query).serializable_hash
       end
 
       def facts_for(params)
-        aggregation = constantize(params[:aggregation])
-        filters, options = facts_query_from_params(params)
-        facts_data = aggregation.facts_for(filters, options)
+        cube, filters, options = facts_query_from_params(params)
+        facts_data = cube.facts_for(filters, options)
         response = {
-          :facts_class => aggregation.facts.name.split("::").pop,
+          :cube => cube.name,
           :data => facts_data
         }
         if facts_data.kind_of?(Wonkavision::Analytics::Paginated)
@@ -57,11 +53,13 @@ module Wonkavision
      
       def facts_query_from_params(params)
         filters = parse_filters(params["filters"])
+        cube = schema.cubes[params["from"]]
+        raise "Could not determine cube from #{params.inspect}" unless cube
         options = {}
         options[:page] = params["page"].to_i if params["page"]
         options[:per_page] = params["per_page"].to_i if params["per_page"]
         options[:sort] = parse_sort_list(params["sort"]) if params["sort"]
-        [filters, options]
+        [cube, filters, options]
       end
 
       def parse_filters(filters_string)

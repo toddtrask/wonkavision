@@ -8,7 +8,7 @@ module Wonkavision
           @members = HashWithIndifferentAccess.new
           @dimensions = []
           dimensions.each do |dim_name|
-            definition = cellset.aggregation.dimensions[dim_name]
+            definition = cellset.cube.dimensions[dim_name]
             members = dimension_members[dim_name.to_s]
             @dimensions << Dimension.new(self,dim_name,definition,members)
           end

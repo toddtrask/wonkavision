@@ -104,14 +104,14 @@ module Wonkavision
         self
       end
 
-      def matches(aggregation, tuple)
+      def matches(cube, tuple)
         #this check allows the database adapter to apply a filter at the db query level
         #Wonkavision will avoid the overhead of checking again if the store signals it has taken care of things
         return true if @applied || tuple.blank?
 
         assert_operator_matches_value
 
-        matches_value extract_attribute_value_from_tuple(aggregation, tuple)
+        matches_value extract_attribute_value_from_tuple(cube, tuple)
       end
 
       def matches_value(data)
@@ -138,16 +138,8 @@ module Wonkavision
         end
       end
 
-      def attribute_key(aggregation)
-        attribute_key = attribute_name.to_s
-        #If the attribute name is key, caption or sort, we need to find the real name of the underling
-        # attribute
-        if dimension?
-          dimension = aggregation.dimensions[name]
-          raise "Error applying a member filter: Dimension #{name} does not exist" unless dimension
-          attribute_key = dimension.send(attribute_name).to_s if dimension.respond_to?(attribute_name)
-        end
-        attribute_key
+      def validate!(cube)
+        !! dimension? ? cube.dimensions[name] : cube.measures[name]
       end
 
       private
@@ -172,9 +164,10 @@ module Wonkavision
       # and can return this kind of information on demand - it is dirty business
       # that a filter class has to know the about the anatomy of a tuple to do its
       # job
-      def extract_attribute_value_from_tuple(aggregation,tuple)
-        val_key = "#{name}_#{attribute_key(aggregation)}"
-        tuple[val_key]
+      def extract_attribute_value_from_tuple(cube,tuple)
+        #val_key = dimension? ? cube.dimensions[name].attribute_key(attribute_name) : attribute_name
+        val_key = "#{name}_#{attribute_name}"
+        tuple[val_key.to_s]
       end
 
       def assert_operator_matches_value

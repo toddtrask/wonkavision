@@ -9,15 +9,15 @@ module Wonkavision
         end
 
         def caption
-          attributes[dimension.definition.caption.to_s]
+          attributes["caption"] || attributes["key"]
         end
 
         def key
-          attributes[dimension.definition.key.to_s]
+          attributes["key"]
         end
 
         def sort
-          attributes[dimension.definition.sort.to_s]
+          attributes["sort"] || attributes["caption"] || attributes["key"]
         end
 
         def <=>(other)

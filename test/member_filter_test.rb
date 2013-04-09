@@ -88,23 +88,17 @@ class MemberFilterTest < ActiveSupport::TestCase
     context "#extract_attribute_value_from_tuple" do
       setup do
         @tuple = {
-          "a_dimension_akey" => "abc", "a_measure_sum" => 2.0, "a_measure_count" => 5  
+          "a_dimension_key" => "abc", "a_measure_sum" => 2.0, "a_measure_count" => 5  
         }
-        @aggregation = {}
+        @cube = {}
         @dimension = {}
       end
       context "for a dimension filter" do
         setup do
           @filter = Wonkavision::Analytics::MemberFilter.new(:a_dimension)
-          @aggregation.expects(:dimensions).returns( {:a_dimension => @dimension} )
         end
         should "extract a dimension value from a tuple message" do
-          @dimension.expects(:key).returns(:akey)
-          assert_equal "abc", @filter.send(:extract_attribute_value_from_tuple,@aggregation,@tuple)
-        end
-        should "extract a dimension value with a custom attribute" do
-          @filter.instance_variable_set("@attribute_name","akey")
-          assert_equal "abc", @filter.send(:extract_attribute_value_from_tuple,@aggregation,@tuple)
+          assert_equal "abc", @filter.send(:extract_attribute_value_from_tuple,@cube,@tuple)
         end
       end
       context "for a measure filter" do
@@ -112,7 +106,7 @@ class MemberFilterTest < ActiveSupport::TestCase
           @filter = Wonkavision::Analytics::MemberFilter.new(:a_measure, :member_type=>:measure)
         end
         should "extract a measure value" do
-          assert_equal 5, @filter.send(:extract_attribute_value_from_tuple,@aggregation,@tuple)
+          assert_equal 5, @filter.send(:extract_attribute_value_from_tuple,@cube,@tuple)
         end
       end
     end

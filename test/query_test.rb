@@ -69,16 +69,6 @@ class QueryTest < ActiveSupport::TestCase
         @query.measures :a, :b, :c
         assert_equal [:a, :b, :c], @query.selected_measures
       end
-      should "default to count" do
-        assert_equal [:count], @query.selected_measures
-      end
-    end
-
-    context "#matches_filter?" do
-      should "return true if all filters are applied" do
-        @query.expects(:all_filters_applied?).returns(true)
-        assert @query.matches_filter?(nil,nil)
-      end
     end
 
     context "#where" do
@@ -116,6 +106,71 @@ class QueryTest < ActiveSupport::TestCase
       end
       should "include only dimensions not on another axis" do
         assert_equal [:c], @query.slicer_dimensions
+      end
+
+    end
+
+    context "validate!" do
+      should "not fail a valid query" do
+        @query.from :transport
+        @query.columns :division
+        @query.measures :current_balance
+        @query.where(:dimensions.division.eq => 1)
+        @query.where(:measures.current_balance.gt => 5)
+        @query.validate!(RevenueAnalytics)
+      end
+      should "fail unless from is specified" do
+        @query.columns :division
+        @query.measures :current_balance
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail without a valid from" do
+        @query.from :not_a_cube
+        @query.columns :division
+        @query.measures :current_balance
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail if axes are selected out of order" do
+        @query.from :transport
+        @query.rows :row
+        @query.measures :current_balance
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail if an invalid measure is specified" do
+        @query.from :transport
+        @query.columns :division
+        @query.measures :tada
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail if no measure is specified" do
+        @query.from :transport
+        @query.columns :not_a_dimension
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail if no dimension is specified" do
+        @query.from :transport
+        @query.measures :current_balance
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail if an invalid dimension is specified" do
+        @query.from :transport
+        @query.measures :current_balance
+        @query.columns :not_a_dimension
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail if an invalid dimension filter is specified" do
+        @query.from :transport
+        @query.measures :current_balance
+        @query.columns :division
+        @query.where :dimensions.not_a_dimension.gt => 1
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail if an invalid measure filter is specified" do
+        @query.from :transport
+        @query.measures :current_balance
+        @query.columns :division
+        @query.where :measures.not_a_measure.gt => 1
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
 
     end

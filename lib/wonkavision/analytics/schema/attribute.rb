@@ -14,6 +14,10 @@ module Wonkavision
           @name.to_s
         end
 
+        def schema
+          dimension.schema
+        end
+
       end
     end
   end

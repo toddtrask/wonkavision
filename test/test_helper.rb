@@ -6,13 +6,17 @@ Bundler.setup
 require 'active_support/test_case'
 require "shoulda"
 require "mocha"
-require "bson"
 
 
 dir = File.dirname(__FILE__)
 require File.join(dir,"..","lib","wonkavision")
 
 $test_dir = dir
+
+Wonkavision::Analytics::Persistence::ActiveRecordStore.connect(
+  :adapter => "sqlite3",
+  :database  => "#{$test_dir}/db"
+)
     
 class StatStore < Wonkavision::Analytics::Persistence::Store
   attr_reader :data, :query

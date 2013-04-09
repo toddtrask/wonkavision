@@ -25,30 +25,21 @@ module Wonkavision
           name.split("::").pop.underscore
         end
 
-        attr_reader :owner
-        def initialize(owner)
-          @owner = owner
+        attr_reader :schema
+        def initialize(schema)
+          @schema = schema
         end
 
-        #Aggregations persistence support
-        #
+       
         # Takes a Wonkavision::Analytics::Query and returns an array of
         # matching tuples
-        def execute_query(query, &block)
-          dimension_names = query.all_dimensions? ? [] :
-            query.referenced_dimensions.dup.
-              concat(Wonkavision::Analytics.context.global_filters.
-              select{ |f| f.dimension?}.map{ |dim_filter| dim_filter.name.to_s }).uniq.
-              sort{ |a,b| a.to_s <=> b.to_s }
-
-          filters = (query.filters + Wonkavision::Analytics.context.global_filters).compact.uniq
-
-          fetch_tuples(dimension_names, filters, &block)
+        def execute_query(query)
+          raise NotImplementedError
         end
 
-        def facts_for(aggregation,filters,options={})
+        def facts_for(cube,filters,options={})
           filters = (filters + Wonkavision::Analytics.context.global_filters).compact.uniq
-          fetch_facts(aggregation,filters,options)
+          fetch_facts(cube,filters,options)
         end
        
         def where(query)
@@ -66,9 +57,6 @@ module Wonkavision
           raise NotImplementedError
         end
       
-        def fetch_tuples(dimension_names, filters = [])
-          raise NotImplementedError
-        end
       
       end
     end

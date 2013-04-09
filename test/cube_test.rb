@@ -54,6 +54,5 @@ class CubeTest < ActiveSupport::TestCase
       assert_equal "adifferentkey", @cube.key
     end
 
-    
   end
 end

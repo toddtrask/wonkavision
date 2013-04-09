@@ -25,6 +25,10 @@ module Wonkavision
           self
         end
 
+        def schema
+          cube.schema
+        end
+
       end
     end
   end

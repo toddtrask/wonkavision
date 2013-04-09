@@ -10,18 +10,18 @@ module Wonkavision
           @dimensions = dims
           @measures = HashWithIndifferentAccess.new
           measure_data.each_pair do |measure_name,measure|
-            measure_opts = cellset.aggregation.measures[measure_name] || {}
-            @measures[measure_name] = Measure.new(measure_name,measure,measure_opts)
+            measure_schema = cellset.cube.measures[measure_name]
+            @measures[measure_name] = Measure.new(measure_name,measure,measure_schema)
           end
-          calculated_measures.each_pair do |measure_name, calc|
-            @measures[measure_name] = CalculatedMeasure.new(measure_name,self,calc)
-          end
+          # calculated_measures.each_pair do |measure_name, calc|
+          #   @measures[measure_name] = CalculatedMeasure.new(measure_name,self,calc)
+          # end
         end
 
         def serializable_hash(options={})
           #ensure calculated measures are added to the measures
           #hash
-          calculated_measures.keys.each {|name|self[name]}
+          #calculated_measures.keys.each {|name|self[name]}
           
           {
             :key => key,
@@ -48,13 +48,13 @@ module Wonkavision
           end
         end
 
-        def calculated_measures
-          cellset.aggregation.calculated_measures
-        end
+        # def calculated_measures
+        #   cellset.aggregation.calculated_measures
+        # end
 
         def [](measure_name)
           unless measures.keys.include?(measure_name.to_s)
-            Measure.new(measure_name,{})
+            Measure.new(measure_name, {})
           else
             measures[measure_name]
           end

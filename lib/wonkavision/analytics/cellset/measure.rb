@@ -2,22 +2,19 @@ module Wonkavision
   module Analytics
     class CellSet
       class Measure
-        attr_reader :name, :data, :options, :default_component, :format
-        def initialize(name,data,opts={})
+        attr_reader :name, :data, :options, :default_component, :format, :schema
+        def initialize(name,data,measure_schema = nil)
           @name = name
           @data = data ? data.dup : {}
-          @options = opts
+          @schema = measure_schema
+          @options = @schema ? @schema.options : {}
           @has_value_field = @data.keys.include?("value")
-          @default_component = options[:default_component] || options[:default_to] || :count
-          @format = options[:format] || nil
+          @default_component = @schema ? @schema.default_aggregation : :count
+          @format = @schema ? @schema.format : nil
         end
 
         def to_s
           formatted_value
-        end
-
-        def calculated?
-          is_a?(CalculatedMeasure)
         end
 
         #options:
@@ -34,7 +31,7 @@ module Wonkavision
           hash.merge!( {
             :data => data,
             :default_component => default_component
-          }) if options[:all_measure_components] && calculated? == false 
+          }) if options[:all_measure_components] 
           hash
         end
 
@@ -57,6 +54,8 @@ module Wonkavision
 
         def sum; empty? ? nil : @data["sum"]; end
         def count; @data["count"]; end
+        def min; @data["min"];end
+        def max; @data["max"];end
 
         def mean; empty? ? nil : sum/count; end
         alias :average :mean
@@ -64,6 +63,8 @@ module Wonkavision
         def aggregate(new_data)
           @data["sum"] = @data["sum"].to_f + new_data["sum"].to_f
           @data["count"] = @data["count"].to_i + new_data["count"].to_i
+          @data["min"] = [@data["min"].to_f, new_data["min"].to_f].min
+          @data["max"] = [@data["max"].to_f, new_data["max"].to_f].max
         end
 
         def method_missing(op,*args)

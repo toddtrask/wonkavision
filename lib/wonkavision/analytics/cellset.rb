@@ -3,15 +3,16 @@ require "set"
 module Wonkavision
   module Analytics
     class CellSet
-      attr_reader :axes, :query, :cells, :totals, :aggregation
+      attr_reader :axes, :query, :cells, :totals, :schema, :cube
 
-      def initialize(aggregation,query,tuples)
+      def initialize(schema,query,tuples)
         @axes = []
         @query = query
-        @aggregation = aggregation
+        @schema = schema
+        @cube = @schema.cubes[query.from]
         @cells = {}
         @dimensions = query.selected_dimensions.map do |dimname|
-          @aggregation.dimensions[dimname]
+          @cube.dimensions[dimname]
         end
         @dimension_fields = {}
         @measure_fields = {}
@@ -33,15 +34,9 @@ module Wonkavision
       def pages; axex[2]; end
       def chapters; axes[3]; end
       def sections; axes[4]; end
-
-      def measure_names
-        @measure_names ||= query.measures.length > 0 ? 
-          query.measures : aggregation.measures.keys + 
-                           aggregation.calculated_measures.keys
-      end
-
+     
       def selected_measures
-        @query.selected_measures
+        [:record] + @query.selected_measures
       end
 
       def inspect
@@ -58,8 +53,8 @@ module Wonkavision
           :cells =>
             @cells.values.map{ |cell| cell.serializable_hash( options ) },
           :totals => @totals ? @totals.serializable_hash( options ) : nil,
-          :measure_names => measure_names,
-          :aggregation => aggregation.name,
+          :measure_names => selected_measures,
+          :cube => cube.name,
           :slicer => @query.slicer.map{ |f| f.to_s },
           :filters => @query.filters.map{ |f| f.to_s }
         }
@@ -111,12 +106,12 @@ module Wonkavision
       def process_tuples(tuples)
         dims = {}
         tuples.each do |record|
-          next unless query.matches_filter?(aggregation, record)
+          next unless query.matches_filter?(cube, record)
           update_cell( record )
           @dimensions.each do |d|
             dimdata = dimension_from_row(d, record)
             dim = dims[d.name.to_s] ||= {}
-            dim_key = dimdata[d.key.to_s]
+            dim_key = dimdata["key"]
             dim[dim_key] ||= dimdata
           end        
         end
@@ -126,7 +121,7 @@ module Wonkavision
       def key_for(record)
         key = []
         @dimensions.each do |dim|
-          key << record["#{dim.name}_#{dim.key}"]
+          key << record["#{dim.dimension.name}_key"]
         end
         key
       end
@@ -162,7 +157,7 @@ module Wonkavision
 
       def measures_from_row(record)
         measures = {}
-        @aggregation.measure_names.each do |measure_name|
+        selected_measures.each do |measure_name|
           measure = {}
           measure_fields(measure_name, record).each do |measure_field|
             component_name = measure_field[measure_name.to_s.length+1..-1]
