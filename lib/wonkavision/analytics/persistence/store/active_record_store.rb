@@ -36,7 +36,6 @@ module Wonkavision
         end
 
         def execute_query(query)
-          query.validate!
           cube = schema.cubes[query.from]
           raise "A cube named #{query.from} was not found in the schema #{schema.name}" unless cube
           
