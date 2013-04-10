@@ -82,7 +82,7 @@ module Wonkavision
             dimensions.each_with_index do |dim_name, index|
               @filters << MemberFilter.new( dim_name, :value => key[index] )
             end
-            @filters += cellset.query.slicer
+            @filters += cellset.query.filters(false)
           end
           @filters
         end

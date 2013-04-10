@@ -482,6 +482,7 @@ class CellSetTest < ActiveSupport::TestCase
               end
               should "prep a cellset based on the data" do
                 assert_equal 521, @cellset.length
+                assert @cellset.serializable_hash
               end
             end
 

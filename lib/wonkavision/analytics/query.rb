@@ -42,8 +42,10 @@ module Wonkavision
         self
       end
 
-      def filters
-        (@filters + Wonkavision::Analytics.context.global_filters).compact.uniq
+      def filters(include_global=true)
+        filterlist = @filters
+        filterlist += Wonkavision::Analytics.context.global_filters if include_global
+        filterlist.compact.uniq
       end
 
 
