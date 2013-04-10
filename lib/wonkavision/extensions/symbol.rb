@@ -7,42 +7,38 @@ module Wonkavision
 
       [:key, :caption, :sort].each do |dimension_attribute|
         define_method(dimension_attribute) do
-          _filter(dimension_attribute, :member_type=>:dimension)
+          _member_reference(dimension_attribute, :member_type=>:dimension)
         end unless method_defined?(dimension_attribute)
       end
 
       [:sum, :count].each do |measure_attribute|
         define_method(measure_attribute) do
-          _filter(measure_attribute, :member_type=>:measure)
+          _member_reference(measure_attribute, :member_type=>:measure)
         end unless method_defined?(measure_attribute)
       end
 
-      # def[](name)
-      #   _filter(name)
-      # end
-
       def method_missing(name,*args)
-        _filter(name) if _is_member_filter?
+        _member_reference(name) if _is_member_reference?
       end
 
       private
       def _member_type
-        self == :measures ? :measure : :dimension
+        [:measures,:facts].include?(self) ? :measure : :dimension
       end
 
-      def _is_member_filter?
-        [:dimensions,:measures].include?(self)
+      def _is_member_reference?
+        [:dimensions,:measures,:facts].include?(self)
       end
 
-       def _filter(name, options={})
+       def _member_reference(name, options={})
         options[:member_type] ||= _member_type
-        if !_is_member_filter?
+        if !_is_member_reference?
           member_name = self
           options[:attribute_name] = name
         else
           member_name = name
         end
-        Wonkavision::Analytics::MemberFilter.new(member_name,options)
+        Wonkavision::Analytics::MemberReference.new(member_name,options)
       end
 
     end

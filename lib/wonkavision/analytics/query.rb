@@ -1,12 +1,14 @@
 module Wonkavision
   module Analytics
     class Query
-      attr_reader :axes
+      attr_reader :axes, :measures, :attributes, :order
 
       def initialize()
         @axes = []
         @filters = []
         @measures = []
+        @order = []
+        @attributes =[]
         @from = nil
       end
 
@@ -30,6 +32,22 @@ module Wonkavision
 
       def measures(*measures)
         @measures.concat measures.flatten
+      end
+
+      def order(*attributes)
+        return @order unless attributes.length > 0
+        attributes.each do |order|
+          @order << (order.kind_of?(MemberReference) ? order : MemberReference.new(order))
+        end
+        self
+      end
+
+      def attributes(*attributes)
+        return @attributes unless attributes.length > 0
+        attributes.each do |attribute|
+          @attributes << (attribute.kind_of?(MemberReference) ? attribute : MemberReference.new(attribute))
+        end
+        self
       end
 
       def where(criteria_hash = {})
@@ -69,6 +87,7 @@ module Wonkavision
       def selected_dimensions
         dimensions = []
         axes.each { |dims|dimensions.concat(dims) unless dims.blank? }
+        dimensions.concat attributes.select{|a|a.dimension?}.map{|a|a.name}
         dimensions.uniq.compact
       end
 

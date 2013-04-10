@@ -35,17 +35,26 @@ module Wonkavision
           self.class.connection
         end
 
-        def execute_query(query)
+        def execute_query(query, options={})
           cube = schema.cubes[query.from]
-          raise "A cube named #{query.from} was not found in the schema #{schema.name}" unless cube
-          
-          sql = create_sql_query(query, cube)
+          sql = create_sql_query(query, cube, options)
+          connection.execute(sql.to_sql)
+        end
+
+        def facts_for(query, options = {})
+          options = options.merge(:group=>false)
+          cube = schema.cubes[query.from]
+          sql = create_sql_query(query, cube, options)
+          if paginate(sql)
+          end
           connection.execute(sql.to_sql)
         end
 
         private 
 
-        def create_sql_query(query, cube)
+        def create_sql_query(query, cube, options)
+          group = options.keys.include?(:group) ? options[:group] : true
+
           referenced_dims = query.referenced_dimensions.map{|d|cube.dimensions[d]}  
           selected_dims = query.selected_dimensions.map{|d|cube.dimensions[d]}
           slicer_dims = query.slicer_dimensions.map{|d|cube.dimensions[d]}
@@ -55,15 +64,23 @@ module Wonkavision
           cubetable = table(cube)
           sql = sql_query(cubetable)
           
-          selected_dims.each{|d|join_dimension(d, cubetable, sql)}
-          slicer_dims.each{|d|join_dimension(d, cubetable, sql, false)}
-          selected_measures.each{|m| project_measure(m, cubetable, sql) }
-          sql.project(Arel.sql('*').count.as('record__count'))
+          selected_dims.each{|d|join_dimension(d, cubetable, sql, true, group)}
+          slicer_dims.each{|d|join_dimension(d, cubetable, sql, false, false)}
+          selected_measures.each{|m| project_measure(m, cubetable, sql, group) }
+          sql.project(Arel.sql('*').count.as('record__count')) if group
           
           query.filters.each do |f|
             apply_filter(f, cube, sql)
           end
-          
+
+          query.attributes.each do |a|
+            project_attribute(a, cube, sql)
+          end
+
+          query.order.each do |o|
+            order_by_attribute(o, cube, sql)
+          end
+
           sql
         end
 
@@ -84,29 +101,37 @@ module Wonkavision
         end
         
         def apply_filter(filter, cube, sql)
-          filter_attr = if filter.dimension?
-            cubedim = cube.dimensions[filter.name]
-            dimtable = table(cubedim)
-            attr_name = cubedim.attribute_key(filter.attribute_name)
-            dimtable[attr_name]
-          else
-            filter_attr = table(cube)[filter.name]
-          end
+          filter_attr = table_attr_from_reference(filter, cube)
           arel_op = filter_op_to_arel_op(filter.operator)
           sql.where(filter_attr.send(arel_op, filter.value))
         end
 
-        def project_measure(measure, table, sql)
-          mattr = table[measure.name]
-          sql.project(
-            mattr.count.as("#{measure.name}__count"),
-            mattr.sum.as("#{measure.name}__sum"),
-            mattr.minimum.as("#{measure.name}__min"),
-            mattr.maximum.as("#{measure.name}__max")
-          )
+        def project_attribute(attribute, cube, sql)
+          member_attr = table_attr_from_reference(attribute, cube)
+          member_attr = member_attr.as("#{attribute.name}__#{attribute.attribute_name}") if attribute.dimension?
+          sql.project(member_attr)
         end
 
-        def join_dimension(cube_dimension, cubetable, sql, project = true)
+        def order_by_attribute(attribute, cube, sql)
+           order_attr = table_attr_from_reference(attribute, cube).send(attribute.order)
+           sql.order(order_attr)
+        end
+
+        def project_measure(measure, table, sql, group)
+          mattr = table[measure.name]
+          if group
+            sql.project(
+              mattr.count.as("#{measure.name}__count"),
+              mattr.sum.as("#{measure.name}__sum"),
+              mattr.minimum.as("#{measure.name}__min"),
+              mattr.maximum.as("#{measure.name}__max")
+            )
+          else
+            sql.project(mattr)
+          end
+        end
+
+        def join_dimension(cube_dimension, cubetable, sql, project, group)
           dimtable = table(cube_dimension)
           pkey = dimtable[cube_dimension.dimension.source_dimension.key]
           fkey = cubetable[cube_dimension.foreign_key]
@@ -121,17 +146,38 @@ module Wonkavision
             #prefix(fkey, cube_dimension.name),
             caption.as("#{cube_dimension.name}__caption")
             #prefix(caption, cube_dimension.name)
-          ).group(dimkey, caption) if project
+          ) if project
+          sql.group(dimkey, caption) if group
 
           if sort_key = cube_dimension.dimension.sort
-            sort = dimtable[sort_key].minimum
-            sql.project(sort.as("#{cube_dimension.name}__sort")).order("#{cube_dimension.name}__sort")
+            sort = dimtable[sort_key]
+            sql.project(sort.minimum.as("#{cube_dimension.name}__sort")) if group
+          end if project
+        end
+
+        def paginate(sql, options)
+          if options[:page] || options[:per_page]
+            page = options[:page] ? options[:page].to_i : 1
+            per_page = options[:per_page] ? options[:per_page].to_i : 25
+            sql.skip(page * per_page)
+            sql.take(per_page)
+            true
+          else
+            false
           end
         end
 
-        # def prefix(name, prefix)
-        #   attribute.as("#{prefix}_#{name}")
-        # end
+        def table_attr_from_reference(member_ref, cube)
+           member_attr = if member_ref.dimension?
+            cubedim = cube.dimensions[member_ref.name]
+            dimtable = table(cubedim)
+            attr_name = cubedim.attribute_key(member_ref.attribute_name)
+            dimtable[attr_name]
+          else
+            member_attr = table(cube)[member_ref.name]
+          end
+          member_attr
+        end
 
         def filter_op_to_arel_op(filter_op)
           case filter_op

@@ -1,41 +1,23 @@
 module Wonkavision
   module Analytics
     class MemberFilter
-      include Comparable
+      extend Forwardable
 
-      attr_reader :name, :operator, :member_type
+      attr_reader :operator, :member_reference
       attr_accessor :value
 
-      def initialize(member_name, options={})
-        @name = member_name
-        @attribute_name = options[:attribute_name]
+      def initialize(member_name_or_reference, options={})
+        @member_reference = member_name_or_reference.kind_of?(MemberReference) ? 
+          member_name_or_reference : MemberReference.new(member_name_or_reference, options)
+
         @operator = options[:operator] || options[:op] || :eq
-        @member_type = options[:member_type] || :dimension
         @value = options[:value]
-        @applied = false
       end
 
-      def attribute_name
-        @attribute_name ||= dimension? ? :key : :count
-      end
+      def_delegators :@member_reference, :member_type, :name, :attribute_name, :dimension?, :measure?,
+                                         :method_missing, :validate!
 
-      def dimension?
-        member_type == :dimension
-      end
-
-      def measure?
-        member_type == :measure
-      end
-
-      def applied!
-        @applied = true
-      end
-
-      def applied?
-        @applied
-      end
-
-       def delimited_value(for_eval=false)
+      def delimited_value(for_eval=false)
         case value
         when nil then "nil"
         when String, Symbol then "'#{value}'"
@@ -44,11 +26,11 @@ module Wonkavision
         end
       end
 
+
       def to_s(options={})
         properties = [member_type,name,attribute_name,operator,delimited_value]
         properties.pop if options[:exclude_value] || options[:name_only]
         properties.pop if options[:name_only]
-
         properties.join("::")
       end
 
@@ -57,14 +39,19 @@ module Wonkavision
       end
 
       def parse(filter_string,options={})
-        parts = filter_string.split("::")
-        @member_type = parts.shift.to_sym
-        @name = parts.shift
-        @attribute_name = parts.shift
+        @member_reference = MemberReference.parse(filter_string)
+        parts = filter_string.split("::")[3..-1]
         @operator = parts.shift.to_sym
         @value = parse_value(options[:value] || parts.shift || @value)
         self
       end
+
+     [:gt, :lt, :gte, :lte, :ne, :in, :nin, :eq].each do |operator|
+        define_method(operator) do |*args|
+          @value = args[0] if args.length > 0
+          @operator = operator; self
+        end unless method_defined?(operator)
+      end   
 
       def to_ary
         nil
@@ -90,24 +77,7 @@ module Wonkavision
       def hash
         inspect.hash
       end
-
-      [:gt, :lt, :gte, :lte, :ne, :in, :nin, :eq].each do |operator|
-        define_method(operator) do |*args|
-          @value = args[0] if args.length > 0
-          @operator = operator; self
-        end unless method_defined?(operator)
-      end
-
-      def method_missing(sym,*args)
-        super unless args.blank?
-        @attribute_name = sym
-        self
-      end
-
-      def validate!(cube)
-        !! dimension? ? cube.dimensions[name] : cube.measures[name]
-      end
-
+    
       private
 
       def parse_value(value_string)

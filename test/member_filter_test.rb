@@ -38,7 +38,6 @@ class MemberFilterTest < ActiveSupport::TestCase
         end
       end
     end
-
   
      context "#to_s" do
       should "produce a canonical string representation of a member filter" do

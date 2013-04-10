@@ -30,6 +30,9 @@ module Wonkavision
           query.add_filter member_filter
         end
 
+        query.attributes *parse_refs(params["attributes"])
+        query.order *parse_refs(params["order"])
+
         query
       end
 
@@ -39,10 +42,11 @@ module Wonkavision
       end
 
       def facts_for(params)
-        cube, filters, options = facts_query_from_params(params)
-        facts_data = cube.facts_for(filters, options)
+        query = query_from_params(params)
+        options = params.slice(:page,:per_page,:sort)
+        facts_data = schema.facts_for(query, options)
         response = {
-          :cube => cube.name,
+          :cube => query.from,
           :data => facts_data
         }
         if facts_data.kind_of?(Wonkavision::Analytics::Paginated)
@@ -51,37 +55,16 @@ module Wonkavision
         response
       end
      
-      def facts_query_from_params(params)
-        filters = parse_filters(params["filters"])
-        cube = schema.cubes[params["from"]]
-        raise "Could not determine cube from #{params.inspect}" unless cube
-        options = {}
-        options[:page] = params["page"].to_i if params["page"]
-        options[:per_page] = params["per_page"].to_i if params["per_page"]
-        options[:sort] = parse_sort_list(params["sort"]) if params["sort"]
-        [cube, filters, options]
-      end
-
       def parse_filters(filters_string)
         filters = parse_list(filters_string) || []
         filters.map{ |f| Wonkavision::Analytics::MemberFilter.parse(f) }
       end
 
-      def parse_sort_list(sort_string)
-        sort = parse_list(sort_string) || []
-        sort.map{ |s| parse_sort(s) }  
+      def parse_refs(refs_string)
+        references = parse_list(refs_string) || []
+        references.map{|a| Wonkavision::Analytics::MemberReference.parse(a)}
       end
-
-      def parse_sort(sort_string)
-        sort = sort_string.split(":")
-        if sort.length > 1
-          sort[1] = sort[1].to_i
-        else
-          sort << 1
-        end  
-        sort
-      end
-
+        
       def parse_list(list_candidate)
         return nil if list_candidate.blank?
           list_candidate.kind_of?(Array) ? 

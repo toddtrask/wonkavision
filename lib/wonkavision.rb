@@ -16,6 +16,7 @@ dir = File.dirname(__FILE__)
  "api/helper",
  "analytics",
  "analytics/paginated",
+ "analytics/member_reference",
  "analytics/member_filter",
  "analytics/persistence/store",
  "analytics/cellset/axis",

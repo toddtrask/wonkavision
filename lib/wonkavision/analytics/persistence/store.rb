@@ -37,9 +37,8 @@ module Wonkavision
           raise NotImplementedError
         end
 
-        def facts_for(cube,filters,options={})
-          filters = (filters + Wonkavision::Analytics.context.global_filters).compact.uniq
-          fetch_facts(cube,filters,options)
+        def facts_for(query,options={})
+          raise NotImplementedError
         end
        
         def where(query)
@@ -49,14 +48,6 @@ module Wonkavision
         def each(query, &block)
           raise NotImplementedError
         end
-
-        protected
-
-        #Abstract methods
-        def fetch_facts(aggregation,filters,options)
-          raise NotImplementedError
-        end
-      
       
       end
     end

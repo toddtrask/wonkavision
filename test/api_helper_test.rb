@@ -16,7 +16,9 @@ class ApiHelperTest < ActiveSupport::TestCase
         "chapters" => ["g","h"],
         "sections" => ["i","j"],
         "measures" => ["k","l"],
-        "filters" => [:dimensions.a.caption.eq(2).to_s, :measures.k.ne("b").to_s].join("|")
+        "filters" => [:dimensions.a.caption.eq(2).to_s, :measures.k.ne("b").to_s].join("|"),
+        "attributes" => [:dimensions.a.key.to_s, :measures.k.to_s],
+        "order" => [:dimensions.b.key.asc.to_s, :measures.c.asc.to_s]
       }
       @query = @helper.query_from_params(@params)
 
@@ -59,6 +61,20 @@ class ApiHelperTest < ActiveSupport::TestCase
       assert_equal "b", @query.filters[1].value
       assert_equal 'count', @query.filters[1].attribute_name
     end
+
+    should "extract attributes" do
+      assert_equal 2, @query.attributes.length
+      @query.attributes.each do |f|
+        assert f.kind_of?(Wonkavision::Analytics::MemberReference)
+      end
+    end
+
+    should "extract sorts" do
+      assert_equal 2, @query.order.length
+      @query.order.each do |s|
+        assert s.kind_of?(Wonkavision::Analytics::MemberReference)
+      end
+    end
   end
 
   context "execute_query" do
@@ -77,11 +93,13 @@ class ApiHelperTest < ActiveSupport::TestCase
       result = {:some=>:data}
       class << result; include Wonkavision::Analytics::Paginated; end
 
-      @helper.expects(:facts_query_from_params).
-        with(:from=>"transport").
-        returns([RevenueAnalytics.cubes[:transport], :hi,{:ho=>:sailor}])
-       RevenueAnalytics.cubes[:transport].expects(:facts_for).with(:hi,{:ho=>:sailor}).returns(result)
-       @response = @helper.facts_for({:from=>"transport"})
+      query = {}
+      query.expects(:from).returns(:transport)
+      @helper.expects(:query_from_params).
+        with(:from=>"transport", :page=>2).
+        returns(query)
+       RevenueAnalytics.expects(:facts_for).with(query,{:page=>2}).returns(result)
+       @response = @helper.facts_for({:from=>"transport", :page=>2})
     end
     should "set the cube name" do
       assert_equal :transport, @response[:cube]
@@ -91,35 +109,6 @@ class ApiHelperTest < ActiveSupport::TestCase
     end
     should "include pagination data" do
       assert @response[:pagination]
-    end
-  end
-
-  
-  context "facts_query_from_params" do
-    setup do
-      @params = {
-        "filters" => [:dimensions.a.caption.eq(2).to_s, :measures.k.ne("b").to_s].join("|"),
-        "page" => "2",
-        "per_page" => "50",
-        "sort" => "a:1|b:-1",
-        "from" => "transport"
-      }
-      @cube, @filters, @options = @helper.facts_query_from_params(@params)
-    end
-    should "extract each filter" do
-      assert_equal 2, @filters.length
-    end
-
-    should "convert strings to MemberFitler" do
-      @filters.each do |f|
-        assert f.kind_of?(Wonkavision::Analytics::MemberFilter)
-      end
-    end
-
-    should "extract the options" do
-      assert_equal 2, @options[:page]
-      assert_equal 50, @options[:per_page]
-      assert_equal [["a",1],["b",-1]], @options[:sort]
     end
   end
 
@@ -138,10 +127,5 @@ class ApiHelperTest < ActiveSupport::TestCase
     end
   end
 
-  context "parse_sort_list" do
-    should "parse a string representing a list of sort criteria into a two dimensional array" do
-      assert_equal [["a",1],["b",-1]], @helper.parse_sort_list("a:1|b:-1")
-    end
-  end
 
 end

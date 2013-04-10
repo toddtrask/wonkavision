@@ -30,6 +30,11 @@ module Wonkavision
           options[:raw] ? tuples : Wonkavision::Analytics::CellSet.new(self, query, tuples)
         end
 
+        def facts_for(query, options = {})
+          query.validate!(self)
+          store.facts_for(query, options)
+        end
+
         def store(new_store=nil)
           if new_store
             store = new_store.kind_of?(Wonkavision::Analytics::Persistence::Store) ?

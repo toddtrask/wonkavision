@@ -52,10 +52,6 @@ module Wonkavision
           @table_name = table_name
         end
 
-        def facts_for(filters, options = {})
-          schema.store.facts_for(self, filters, options)
-        end
-
       end
     end
   end
