@@ -83,7 +83,8 @@ module Wonkavision
       end
 
       def validate!(schema)
-        raise "You must specify a 'from' cube in your query" unless @from && cube = schema.cubes[@from]
+        raise "You must specify a 'from' cube in your query" unless @from
+        raise "The specified cube (#{@from} does not exist" unless cube = schema.cubes[@from]
         axes.each_with_index{|axis,index|raise "Axes must be selected from in consecutive order and contain at least one dimension. Axis #{index} is blank." if axis.blank?}
         selected_measures.each{|measure_name|raise "The measure #{measure_name} cannot be found in #{cube.name}" unless cube.measures[measure_name]}
         raise "No dimensions were selected" unless selected_dimensions.length > 0
