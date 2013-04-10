@@ -11,7 +11,7 @@ module Wonkavision
         end unless method_defined?(dimension_attribute)
       end
 
-      [:sum, :count].each do |measure_attribute|
+      [:sum, :count, :min, :max, :avg].each do |measure_attribute|
         define_method(measure_attribute) do
           _member_reference(measure_attribute, :member_type=>:measure)
         end unless method_defined?(measure_attribute)

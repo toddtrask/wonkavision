@@ -45,7 +45,8 @@ module Wonkavision
           options = options.merge(:group=>false)
           cube = schema.cubes[query.from]
           sql = create_sql_query(query, cube, options)
-          if paginate(sql)
+          if paginate(sql, options)
+            #TODO - set total pages somehow
           end
           connection.execute(sql.to_sql)
         end
