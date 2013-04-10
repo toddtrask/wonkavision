@@ -17,7 +17,8 @@ module Wonkavision
         end
 
         def sort
-          attributes["sort"] || caption
+          sort = attributes["sort"] || caption
+          sort.is_numeric? ? sort.to_f : sort
         end
 
         def <=>(other)
