@@ -9,7 +9,7 @@ module Wonkavision
         end
 
         def caption
-          attributes["caption"] || attributes["key"]
+          attributes["caption"] || attributes["key"] || "Unkown"
         end
 
         def key
@@ -17,7 +17,7 @@ module Wonkavision
         end
 
         def sort
-          attributes["sort"] || attributes["caption"] || attributes["key"]
+          attributes["sort"] || attributes["caption"] || attributes["key"] || "Unknown"
         end
 
         def <=>(other)
