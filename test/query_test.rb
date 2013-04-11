@@ -117,6 +117,8 @@ class QueryTest < ActiveSupport::TestCase
         @query.measures :current_balance
         @query.where(:dimensions.division.eq => 1)
         @query.where(:measures.current_balance.gt => 5)
+        @query.order :measures.current_balance.desc
+        @query.attributes :dimensions.provider.caption
         @query.validate!(RevenueAnalytics)
       end
       should "fail unless from is specified" do
@@ -165,6 +167,18 @@ class QueryTest < ActiveSupport::TestCase
         @query.measures :current_balance
         @query.columns :division
         @query.where :measures.not_a_measure.gt => 1
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail with an invalid order" do
+        @query.from :transport
+        @query.columns :division
+        @query.order :dimensions.not_a_dimension.asc
+        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+      end
+      should "fail with an invalid attribute" do
+        @query.from :transport
+        @query.columns :division
+        @query.attributes :dimensions.not_a_dimension
         assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
 
