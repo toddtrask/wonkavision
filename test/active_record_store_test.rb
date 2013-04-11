@@ -70,9 +70,9 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
             assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_provider" && join.left.right.to_s == "provider"}, "provider"
           end
           should "filter dimensions" do
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "division_key" && w.right == 1}
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "provider_name" && w.right == 'REACH'}
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::GreaterThan) && w.left.name.to_s == "current_balance" && w.right == 0}
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "division_key" && w.right == 1}, "division_key=>1"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "provider_name" && w.right == 'REACH'}, "provider_name=>reach"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::GreaterThan) && w.left.name.to_s == "current_balance" && w.right == 0},"current_balance=>0"
           end
           should "group by projected dimension attributes" do
             assert_equal @projections.select{|n|n.is_a?(Arel::Nodes::As)}.length, @groups.length

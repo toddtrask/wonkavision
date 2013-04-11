@@ -73,15 +73,15 @@ module Wonkavision
       end
 
       def slicer
-        filters.select{|f|f.dimension?}.reject{|f|selected_dimensions.include?(f.name.to_sym)}
+        filters.select{|f|f.dimension?}.reject{|f|selected_dimensions.include?(f.name.to_sym)}.uniq.compact
       end
 
       def slicer_dimensions
-        slicer.map{ |f|f.name.to_sym }
+        slicer.map{ |f|f.name }.uniq.compact.map(&:to_sym)
       end
 
       def referenced_dimensions
-        ( [] + selected_dimensions.map{|s|s.to_sym} + slicer.map{|f|f.name.to_sym} ).uniq.compact
+        ( [] + selected_dimensions.map{|s|s} + slicer.map{|f|f.name} ).uniq.compact.map(&:to_sym)
       end
 
       def selected_dimensions
