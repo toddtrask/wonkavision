@@ -93,10 +93,11 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
         context "facts related queries" do
           setup do
             @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {:group=>false})
+            @store.connection.expects(:execute).returns([{"count"=>100}])
             @paginate = @store.send(:paginate, @sql, {:page=>2, :per_page=>50})
           end
           should "return true if paginated" do
-            assert_equal( {:current_page=>2, :per_page=>50}, @paginate )
+            assert_equal( {:current_page=>2, :per_page=>50, :total_entries=>100}, @paginate )
           end
           should "apply the correct offset" do
             assert_equal 50, @sql.offset
@@ -109,8 +110,8 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           should "execute the query and set pagination" do
             @query.attributes :facts.account_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
             @query.order :facts.current_balance.desc, :facts.date_of_service_key
-            @store.connection.expects(:execute).returns([{"count"=>100}])
             @store.connection.expects(:execute).returns([1,2,3])
+            @store.connection.expects(:execute).returns([{"count"=>100}])
             result = @store.facts_for(@query, :page=>2, :per_page=>5)
             assert_equal [1,2,3], result
             assert_equal 100, result.total_entries

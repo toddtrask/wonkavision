@@ -47,11 +47,7 @@ module Wonkavision
           paginated =  paginate(sql, options)
           sql_string = sql.to_sql
           data = connection.execute(sql_string)
-          if paginated
-            countsql = "select count(*) from (#{sql_string}) as cnt"
-            rcount = connection.execute(countsql).first["count"].to_i
-            Paginated.apply(data, paginated.merge(:total_entries=>rcount))
-          end
+          Paginated.apply(data, paginated) if paginated
           data
         end
 
@@ -162,11 +158,13 @@ module Wonkavision
 
         def paginate(sql, options)
           if options[:page] || options[:per_page]
+            countsql = "select count(*) from (#{sql.to_sql}) as cnt"
+            rcount = connection.execute(countsql).first["count"].to_i
             page = options[:page] ? options[:page].to_i : 1
             per_page = options[:per_page] ? options[:per_page].to_i : 25
             sql.skip((page-1) * per_page)
             sql.take(per_page)
-            {:current_page => page, :per_page=>per_page}
+            {:current_page => page, :per_page=>per_page, :total_entries=>rcount}
           else
             false
           end
