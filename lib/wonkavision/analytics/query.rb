@@ -77,7 +77,7 @@ module Wonkavision
       end
 
       def slicer_dimensions
-        slicer.map{ |f|f.name.to_s }
+        slicer.map{ |f|f.name.to_sym }
       end
 
       def referenced_dimensions
