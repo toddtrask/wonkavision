@@ -178,7 +178,7 @@ class QueryTest < ActiveSupport::TestCase
       should "fail with an invalid attribute" do
         @query.from :transport
         @query.columns :division
-        @query.attributes :dimensions.not_a_dimension
+        @query.attributes :measures.not_a_measure
         assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
 

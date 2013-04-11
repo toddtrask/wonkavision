@@ -111,7 +111,7 @@ module Wonkavision
         raise "No dimensions were selected" unless selected_dimensions.length > 0
         selected_dimensions.each{|dim_name| raise "The dimension #{dim_name} cannot be found in #{cube.name}" unless cube.dimensions[dim_name]}
         filters.each{|filter| raise "A filter referenced an invalid member:#{filter.to_s}" unless filter.validate!(cube)}
-        order.each{|ref|raise "An order by reqferenced an invalid member:#{ref.to_s}" unless ref.validate!(cube)}
+        (order + attributes).each{|ref|raise "An invalid member was referenced:#{ref.to_s}" unless ref.validate!(cube)}
         true
       end     
 
