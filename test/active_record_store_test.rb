@@ -109,7 +109,7 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           should "execute the query and set pagination" do
             @query.attributes :facts.account_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
             @query.order :facts.current_balance.desc, :facts.date_of_service_key
-            @store.connection.expects(:execute).returns({"count"=>100})
+            @store.connection.expects(:execute).returns([{"count"=>100}])
             @store.connection.expects(:execute).returns([1,2,3])
             result = @store.facts_for(@query, :page=>2, :per_page=>5)
             assert_equal [1,2,3], result

@@ -49,7 +49,7 @@ module Wonkavision
           data = connection.execute(sql_string)
           if paginated
             countsql = "select count(*) from (#{sql_string}) as cnt"
-            rcount = connection.execute(countsql)["count"]
+            rcount = connection.execute(countsql).first["count"].to_i
             Paginated.apply(data, paginated.merge(:total_entries=>rcount))
           end
           data
