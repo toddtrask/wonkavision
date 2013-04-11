@@ -107,13 +107,9 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
         end
         context "facts_for" do
           should "execute the query" do
-            @query = Wonkavision::Analytics::Query.new
-            sql = {}
-            sql.expects(:to_sql).returns(:sql_string)
-            @query.from :transport
-            @store.expects(:create_sql_query).with(@query, RevenueAnalytics.cubes[:transport], {:group=>false}).returns(sql)
-            @store.expects(:paginate).with(sql, {}).returns(true)
-            @store.connection.expects(:execute).with(:sql_string)
+            @query.attributes :facts.account_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
+            @query.order :facts.current_balance.desc, :facts.date_of_service_key
+            @store.connection.expects(:execute)
             @store.facts_for(@query)
           end
 

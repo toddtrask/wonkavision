@@ -53,7 +53,7 @@ module Wonkavision
         private 
 
         def create_sql_query(query, cube, options)
-          group = options.keys.include?(:group) ? options[:group] : true
+          group = options[:group] == false ? false : true
 
           referenced_dims = query.referenced_dimensions.map{|d|cube.dimensions[d]}  
           selected_dims = query.selected_dimensions.map{|d|cube.dimensions[d]}
