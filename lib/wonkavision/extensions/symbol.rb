@@ -23,7 +23,11 @@ module Wonkavision
 
       private
       def _member_type
-        [:measures,:facts].include?(self) ? :measure : :dimension
+        case self
+        when :measures then :measure
+        when :facts then :fact
+        else :dimension
+        end
       end
 
       def _is_member_reference?

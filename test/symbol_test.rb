@@ -50,6 +50,14 @@ class SymbolTest < ActiveSupport::TestCase
         assert_equal :measure, filter.member_type
       end
     end
+    context "when the symbol is ':facts'" do
+      should "produce a MemberReference with a cube name as specified and an specified attribute name" do
+        ref = :facts.a_cube.an_attribute
+        assert_equal :a_cube, ref.name
+        assert_equal :an_attribute, ref.attribute_name
+        assert_equal :fact, ref.member_type
+      end
+    end
 
   end
 

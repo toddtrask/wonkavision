@@ -23,6 +23,7 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           @query.rows :primary_payer_type, :primary_payer
           @query.measures :current_balance
           @query.where :division => 1, :provider.caption => 'REACH', :measures.current_balance.gt => 0
+          @query.validate!(RevenueAnalytics)
         end
         context "for aggregate data" do
           setup do
@@ -80,8 +81,9 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
         end
         context "for detail data" do
           setup do
-            @query.attributes :facts.account_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
-            @query.order :facts.current_balance.desc, :facts.date_of_service_key
+            @query.attributes :facts.transport.account_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
+            @query.order :facts.transport.current_balance.desc, :facts.transport.date_of_service_key
+            @query.validate!(RevenueAnalytics)
             @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {:group=>false})
             @projections = @sql.instance_eval('@ctx').projections
             @groups = @sql.instance_eval('@ctx').groups
@@ -108,20 +110,32 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
         end
         context "facts_for" do
           should "execute the query and set pagination" do
-            @query.attributes :facts.account_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
-            @query.order :facts.current_balance.desc, :facts.date_of_service_key
+            @query.attributes :facts.transport.accountt_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
+            @query.order :facts.transport.current_balance.desc, :facts.transport.date_of_service_key
+            @query.validate!(RevenueAnalytics)
             @store.connection.expects(:execute).returns([1,2,3])
             @store.connection.expects(:execute).returns([{"count"=>100}])
             result = @store.facts_for(@query, :page=>2, :per_page=>5)
             assert_equal [1,2,3], result
             assert_equal 100, result.total_entries
           end
-
+        end            
+      end
+      context "linked cubes" do
+        setup do
+          @query = Wonkavision::Analytics::Query.new
+          @query.from(:denial)
+          @query.columns :payer, :division, :provider
+          @query.measures :denial_balance
+          @query.where :division => 1, :provider.caption => 'REACH', :measures.denial_balance.gt => 0, :facts.transport.current_balance.gt => 0
+          @query.validate!(RevenueAnalytics)
+          @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
         end
-            
+        should "not break" do
+          puts @sql.to_sql
+        end
       end
 
     end
-
   end
 end

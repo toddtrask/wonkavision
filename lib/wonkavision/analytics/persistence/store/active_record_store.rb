@@ -60,14 +60,19 @@ module Wonkavision
           selected_dims = query.selected_dimensions.map{|d|cube.dimensions[d]}
           slicer_dims = query.slicer_dimensions.map{|d|cube.dimensions[d]}
 
+          linked_cubes = referenced_dims.select(&:has_linked_cube?).map{|d|d.linked_cube}.
+                         concat(query.referenced_facts.map{|f|cube.linked_cubes[f]}).uniq
+
+
           selected_measures = query.selected_measures.map{|m|cube.measures[m]}
 
-          cubetable = table(cube)
-          sql = sql_query(cubetable)
+          sql = sql_query(table(cube))
+
+          linked_cubes.each{|link|join_linked_cube(link, sql)}
           
-          selected_dims.each{|d|join_dimension(d, cubetable, sql, true, group)}
-          slicer_dims.each{|d|join_dimension(d, cubetable, sql, false, false)}
-          selected_measures.each{|m| project_measure(m, cubetable, sql, group) }
+          selected_dims.each{|d|join_dimension(d, sql, true, group)}
+          slicer_dims.each{|d|join_dimension(d, sql, false, false)}
+          selected_measures.each{|m| project_measure(m, sql, group) }
           sql.project(Arel.sql('*').count.as('record__count')) if group
           
           query.filters.each do |f|
@@ -118,7 +123,8 @@ module Wonkavision
            sql.order(order_attr)
         end
 
-        def project_measure(measure, table, sql, group)
+        def project_measure(measure, sql, group)
+          table = table(measure.cube)
           mattr = table[measure.name]
           if group
             sql.project(
@@ -132,9 +138,19 @@ module Wonkavision
           end
         end
 
-        def join_dimension(cube_dimension, cubetable, sql, project, group)
+        def join_linked_cube(link, sql)
+          cubetable = table(link.cube)
+          linked_cube = link.linked_cube
+          linktable = table(linked_cube)
+          pkey = linktable[linked_cube.key]
+          fkey = cubetable[link.foreign_key]
+          sql.join(linktable).on fkey.eq pkey
+        end
+
+        def join_dimension(cube_dimension, sql, project, group)
+          cubetable = table(cube_dimension.source_cube)
           dimtable = table(cube_dimension)
-          pkey = dimtable[cube_dimension.dimension.source_dimension.key]
+          pkey = dimtable[cube_dimension.primary_key]
           fkey = cubetable[cube_dimension.foreign_key]
           dimkey = dimtable[cube_dimension.dimension.key]
           caption = dimtable[cube_dimension.dimension.caption]
@@ -176,8 +192,10 @@ module Wonkavision
             dimtable = table(cubedim)
             attr_name = cubedim.attribute_key(member_ref.attribute_name)
             dimtable[attr_name]
+          elsif member_ref.fact?
+            table(cube.schema.cubes[member_ref.name])[member_ref.attribute_name]
           else
-            member_attr = table(cube)[member_ref.name]
+            table(cube)[member_ref.name]
           end
           member_attr
         end

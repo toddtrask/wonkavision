@@ -14,7 +14,7 @@ module Wonkavision
         @value = options[:value]
       end
 
-      def_delegators :@member_reference, :member_type, :name, :attribute_name, :dimension?, :measure?,
+      def_delegators :@member_reference, :member_type, :name, :attribute_name, :dimension?, :measure?,:fact?,
                                          :method_missing, :validate!
 
       def delimited_value(for_eval=false)

@@ -84,6 +84,13 @@ module Wonkavision
         ( [] + selected_dimensions.map{|s|s} + slicer.map{|f|f.name} ).uniq.compact.map(&:to_sym)
       end
 
+      def referenced_facts
+        (
+          order.select{|a|a.fact?}.map(&:name) + 
+          attributes.select{|a|a.fact?}.map(&:name)
+        ).uniq.compact.map(&:to_sym) - [from.to_sym]
+      end
+
       def selected_dimensions
         dimensions = []
         axes.each { |dims|dimensions.concat(dims) unless dims.blank? }

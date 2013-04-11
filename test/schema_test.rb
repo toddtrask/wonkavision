@@ -13,7 +13,7 @@ class SchemaTest < ActiveSupport::TestCase
     end
 
     should "maintain a list of defined cubes" do
-      assert_equal 1, RevenueAnalytics.cubes.length
+      assert_equal 2, RevenueAnalytics.cubes.length
       assert RevenueAnalytics.cubes.values[0].is_a?(Wonkavision::Analytics::Schema::Cube)
     end
 

@@ -21,6 +21,17 @@ class RevenueAnalytics
   dimension :division
   dimension :provider
 
+
+  cube :denial do
+    link_to :transport, :foreign_key => :account_key
+
+    sum :denial_balance
+    
+    dimension :payer
+    dimension :division, :through => :transport
+    dimension :provider, :through => :transport
+  end
+
   cube :transport do
     key :account_key
 
@@ -33,7 +44,6 @@ class RevenueAnalytics
     dimension :current_payer_type, :as => :payer_type, :via=> :current_payer
     dimension :division
     dimension :provider
-
   end
 end
 

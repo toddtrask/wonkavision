@@ -28,6 +28,7 @@ dir = File.dirname(__FILE__)
  "analytics/query",
  "analytics/schema.rb",
  "analytics/schema/attribute.rb",
+ "analytics/schema/linked_cube.rb",
  "analytics/schema/cube.rb",
  "analytics/schema/cube_dimension.rb",
  "analytics/schema/dimension.rb",

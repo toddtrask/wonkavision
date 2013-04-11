@@ -24,6 +24,10 @@ module Wonkavision
         member_type == :measure
       end
 
+      def fact?
+        member_type == :fact
+      end
+
       def to_a
         [member_type,name,attribute_name,order]
       end
@@ -86,13 +90,21 @@ module Wonkavision
       end
 
       def method_missing(sym,*args)
-        super unless args.blank?
+        super unless args.length < 1
         @attribute_name = sym
         self
       end
 
       def validate!(cube)
-        !! dimension? ? cube.dimensions[name] : cube.measures[name]
+        valid = if dimension?
+          cube.dimensions[name]
+        elsif measure?
+          cube.measures[name]
+        else
+          #facts can refer to the current cube or a linked cube
+          cube.name.to_s == name.to_s || cube.linked_cubes[name]
+        end
+        !!valid
       end
 
     end
