@@ -42,9 +42,8 @@ module Wonkavision
         end
 
         def facts_for(query, options = {})
-          options = options.merge(:group=>false)
           cube = schema.cubes[query.from]
-          sql = create_sql_query(query, cube, options)
+          sql = create_sql_query(query, cube, options.merge(:group => false))
           if paginate(sql, options)
             #TODO - set total pages somehow
           end

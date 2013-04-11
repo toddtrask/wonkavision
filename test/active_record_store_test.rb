@@ -105,6 +105,19 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
             assert_equal 50, @sql.taken
           end
         end
+        context "facts_for" do
+          should "execute the query" do
+            @query = Wonkavision::Analytics::Query.new
+            sql = {}
+            sql.expects(:to_sql).returns(:sql_string)
+            @query.from :transport
+            @store.expects(:create_sql_query).with(@query, RevenueAnalytics.cubes[:transport], {:group=>false}).returns(sql)
+            @store.expects(:paginate).with(sql, {}).returns(true)
+            @store.connection.expects(:execute).with(:sql_string)
+            @store.facts_for(@query)
+          end
+
+        end
             
       end
 
