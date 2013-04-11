@@ -96,7 +96,7 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
             @paginate = @store.send(:paginate, @sql, {:page=>2, :per_page=>50})
           end
           should "return true if paginated" do
-            assert_equal true, @paginate
+            assert_equal( {:current_page=>2, :per_page=>50}, @paginate )
           end
           should "apply the correct offset" do
             assert_equal 100, @sql.offset
@@ -106,11 +106,14 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           end
         end
         context "facts_for" do
-          should "execute the query" do
+          should "execute the query and set pagination" do
             @query.attributes :facts.account_call_number, :dimensions.provider.rpm_source_key, :dimensions.current_payer.payer_name
             @query.order :facts.current_balance.desc, :facts.date_of_service_key
-            @store.connection.expects(:execute)
-            @store.facts_for(@query)
+            @store.connection.expects(:execute).returns [100]
+            @store.connection.expects(:execute).returns([1,2,3])
+            result = @store.facts_for(@query, :page=>2, :per_page=>5)
+            assert_equal [1,2,3], result
+            assert_equal 100, result.total_entries
           end
 
         end
