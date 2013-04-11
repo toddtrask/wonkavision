@@ -169,18 +169,6 @@ class QueryTest < ActiveSupport::TestCase
         @query.where :measures.not_a_measure.gt => 1
         assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
-      should "fail with an invalid order" do
-        @query.from :transport
-        @query.columns :division
-        @query.order :dimensions.not_a_dimension.asc
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
-      end
-      should "fail with an invalid attribute" do
-        @query.from :transport
-        @query.columns :division
-        @query.attributes :measures.not_a_measure
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
-      end
 
     end
 
