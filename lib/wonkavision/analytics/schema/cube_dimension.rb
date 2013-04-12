@@ -35,7 +35,7 @@ module Wonkavision
         end
 
         def primary_key
-          dimension.source_dimension.key
+          dimension.source_dimension.primary_key
         end
 
         def attribute_key(attribute_name)

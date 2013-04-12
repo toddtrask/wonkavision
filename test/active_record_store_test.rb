@@ -129,10 +129,9 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           @query.measures :denial_balance
           @query.where :division => 1, :provider.caption => 'REACH', :measures.denial_balance.gt => 0, :facts.transport.current_balance.gt => 0
           @query.validate!(RevenueAnalytics)
-          @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
         end
         should "not break" do
-          puts @sql.to_sql
+          @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
         end
       end
 

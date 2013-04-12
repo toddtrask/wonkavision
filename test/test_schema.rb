@@ -8,6 +8,7 @@ class RevenueAnalytics
   end
 
   dimension :payer do
+    key :payer_source_key
     attribute :payer_type
     sort :payer_name
   end

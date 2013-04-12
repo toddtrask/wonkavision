@@ -3,6 +3,7 @@ module Wonkavision
     module Schema
       class Dimension
         attr_reader :name, :attributes, :options, :schema, :table_name, :source_dimension
+        attr_reader :primary_key
         attr_writer :key, :sort, :caption
 
         def initialize(schema, name,options={},&block)
@@ -11,6 +12,7 @@ module Wonkavision
           @options = options
           @attributes = HashWithIndifferentAccess.new
           @table_name = options[:table_name] || "dim_#{name}"
+          @primary_key = options[:primary_key] || "#{name}_key"
           @source_dimension = self
           key options[:key] if options[:key]
           sort options[:sort] if options[:sort]
@@ -18,7 +20,7 @@ module Wonkavision
           if block
             block.arity == 1 ? block.call(self) : self.instance_eval(&block)
           end
-          key "#{name}_key" unless @key
+          key @primary_key unless @key
           caption "#{name}_name" unless @caption
         end
 
@@ -54,6 +56,10 @@ module Wonkavision
           @table_name = table_name
         end
 
+        def primary_key(primary_key = nil)
+          return @primary_key unless primary_key
+          @primary_key = primary_key
+        end
 
       end
     end
