@@ -61,7 +61,7 @@ module Wonkavision
           slicer_dims = query.slicer_dimensions.map{|d|cube.dimensions[d]}
 
           linked_cubes = referenced_dims.select(&:has_linked_cube?).map{|d|d.linked_cube}.
-                         concat(query.referenced_facts.map{|f|cube.linked_cubes[f]}).uniq
+                         concat(query.referenced_facts.map{|f|cube.linked_cubes[f]}).uniq.compact
 
 
           selected_measures = query.selected_measures.map{|m|cube.measures[m]}
