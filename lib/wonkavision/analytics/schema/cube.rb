@@ -16,6 +16,7 @@ module Wonkavision
           if block
             block.arity == 1 ? block.call(self) : self.instance_eval(&block)
           end
+          sum(:record_count)
         end
 
         def dimension(name, options={}, &block)
