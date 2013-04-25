@@ -21,7 +21,7 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           @query.from(:transport)
           @query.columns :account_age_from_dos
           @query.rows :primary_payer_type, :primary_payer
-          @query.measures :current_balance
+          @query.measures :record_count, :current_balance
           @query.where :division => 1, :provider.caption => 'REACH', :measures.current_balance.gt => 0
           Wonkavision::Analytics.context.global_filters << Wonkavision::Analytics::MemberFilter.parse("dimension::division::another_attribute::in::[1,2]")
           @query.validate!(RevenueAnalytics)
@@ -58,6 +58,10 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
               assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Count) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance__count"}, "count"
               assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Min) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance__min"}, "min"
               assert selected_measures.detect{|m|m.is_a?(Arel::Nodes::Max) && m.expressions[0].name.to_s == "current_balance" && m.alias == "current_balance__max"}, "max"
+            end
+            should "not project the included record_count" do
+              selected_measures = @projections.select{|n|!n.is_a?(Arel::Nodes::As)}
+              assert !selected_measures.detect{|m|m.is_a?(Arel::Nodes::Sum) && m.expressions[0].name.to_s == "record_count" && m.alias == "record_count__sum"},"record_count should not be present" 
             end
             should "project sorts" do
               selected_sorts = @projections.select{|n|n.is_a?(Arel::Nodes::Min) && n.alias =~ /.*_sort/ }
