@@ -23,7 +23,11 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           @query.rows :primary_payer_type, :primary_payer
           @query.measures :current_balance
           @query.where :division => 1, :provider.caption => 'REACH', :measures.current_balance.gt => 0
+          Wonkavision::Analytics.context.filter :dimensions.division.another_attribute.in => [1,2]
           @query.validate!(RevenueAnalytics)
+        end
+        teardown do
+          Wonkavision::Analytics.context.global_filters.clear
         end
         context "for aggregate data" do
           setup do
@@ -69,6 +73,9 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           should "join slicer dimensions" do
             assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_division" && join.left.right.to_s == "division"}, "division"
             assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_provider" && join.left.right.to_s == "provider"}, "provider"
+          end
+          should "join a source only once" do
+            assert @sql.join_sources.select{|join|join.left.left.name.to_s == "dim_division" && join.left.right.to_s == "division"}.length == 1, "multiple identical joins"
           end
           should "filter dimensions" do
             assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "division_key" && w.right == 1}, "division_key=>1"

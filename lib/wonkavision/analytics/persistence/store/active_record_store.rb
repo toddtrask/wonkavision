@@ -160,9 +160,7 @@ module Wonkavision
           )
           sql.project(
             dimkey.as("#{cube_dimension.name}__key"),
-            #prefix(fkey, cube_dimension.name),
             caption.as("#{cube_dimension.name}__caption")
-            #prefix(caption, cube_dimension.name)
           ) if project
           sql.group(dimkey, caption) if group
 
