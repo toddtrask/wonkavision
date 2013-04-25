@@ -73,29 +73,29 @@ module Wonkavision
       end
 
       def slicer
-        filters.select{|f|f.dimension?}.reject{|f|selected_dimensions.include?(f.name.to_sym)}.uniq.compact
+        filters.select{|f|f.dimension?}.reject{|f|selected_dimensions.include?(f.name.to_sym)}.compact.uniq
       end
 
       def slicer_dimensions
-        slicer.map{ |f|f.name }.uniq.compact.map(&:to_sym)
+        unique_list slicer.map{ |f|f.name }
       end
 
       def referenced_dimensions
-        ( [] + selected_dimensions.map{|s|s} + slicer.map{|f|f.name} ).uniq.compact.map(&:to_sym)
+        unique_list( [] + selected_dimensions.map{|s|s} + slicer.map{|f|f.name} )
       end
 
       def referenced_facts
-        (
+        unique_list(
           order.select{|a|a.fact?}.map(&:name) + 
           attributes.select{|a|a.fact?}.map(&:name)
-        ).uniq.compact.map(&:to_sym) - [from.to_sym]
+        ) - [from.to_sym]
       end
 
       def selected_dimensions
         dimensions = []
         axes.each { |dims|dimensions.concat(dims) unless dims.blank? }
         dimensions.concat attributes.select{|a|a.dimension?}.map{|a|a.name}
-        dimensions.uniq.compact.map(&:to_sym)
+        unique_list dimensions
       end
 
       def all_dimensions?
@@ -130,6 +130,11 @@ module Wonkavision
         when "sections" then 4
         else axis_def.to_i
         end
+      end
+
+      private
+      def unique_list(list = [])
+        list.compact.map(&:to_sym).uniq
       end
 
     end

@@ -23,7 +23,7 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           @query.rows :primary_payer_type, :primary_payer
           @query.measures :current_balance
           @query.where :division => 1, :provider.caption => 'REACH', :measures.current_balance.gt => 0
-          Wonkavision::Analytics.context.filter :dimensions.division.another_attribute.in => [1,2]
+          Wonkavision::Analytics.context.global_filters << Wonkavision::Analytics::MemberFilter.parse("dimension::division::another_attribute::in::[1,2]")
           @query.validate!(RevenueAnalytics)
         end
         teardown do
