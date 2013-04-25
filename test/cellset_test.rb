@@ -367,7 +367,7 @@ class CellSetTest < ActiveSupport::TestCase
                 assert_equal [:size, :shape, :color], @hash[:dimensions]
               end
               should "include measures" do
-                assert_equal 3, @hash[:measures].length
+                assert_equal 2, @hash[:measures].length
               end
               # should "include calculated measures" do
               #   assert @hash[:measures][2][:calculated]

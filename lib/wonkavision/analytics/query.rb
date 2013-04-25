@@ -103,7 +103,7 @@ module Wonkavision
       end
 
       def selected_measures
-        @measures || []
+        @measures || [:record_count]
       end
 
       def matches_filter?(cube, tuple)

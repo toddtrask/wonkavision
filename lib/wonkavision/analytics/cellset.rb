@@ -35,7 +35,7 @@ module Wonkavision
       def sections; axes[4]; end
      
       def selected_measures
-        [:record] + @query.selected_measures
+        @query.selected_measures
       end
 
       def inspect

@@ -73,7 +73,7 @@ module Wonkavision
           selected_dims.each{|d|join_dimension(d, sql, true, group)}
           slicer_dims.each{|d|join_dimension(d, sql, false, false)}
           selected_measures.each{|m| project_measure(m, sql, group) }
-          sql.project(Arel.sql('*').count.as('record__count')) if group
+          sql.project(Arel.sql('*').count.as('record_count__count')) if group
           
           query.filters.each do |f|
             apply_filter(f, cube, sql)
