@@ -23,13 +23,7 @@ module Wonkavision
 
         def calculate!(context)
           raise "#calculate! should only be called on a calculated measure" unless calculated?
-          result = nil
-          begin
-            result = (calculation.arity == 1 ? calculation.call(context) : context.instance_eval(&calculation))
-          rescue Exception => ex
-            result = nil
-          end
-          result
+          (calculation.arity == 1 ? calculation.call(context) : context.instance_eval(&calculation))
         end
 
         def default_aggregation

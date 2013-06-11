@@ -67,7 +67,11 @@ class CellsetSchema
     measure :weight, :default_aggregation => :average, :format => :float, :precision => 2
     measure :cost, :default_aggregation => :sum, :format => :float, :precision => 1
     calc :weight_cost do |cell|
-      cell.weight.value * cell.cost.value
+      if cell && !cell.weight.value.nil? && !cell.cost.value.nil?
+        cell.weight.value * cell.cost.value
+      else 
+        nil
+      end
     end
 
   end
