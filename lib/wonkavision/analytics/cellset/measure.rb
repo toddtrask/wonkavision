@@ -48,7 +48,9 @@ module Wonkavision
           if calculated?
             @schema.calculate!(self.cell)
           else
-            send(@default_component)
+            val = send(@default_component)
+            val = val.to_f unless val.nil? || val.kind_of?(Numeric)
+            val
           end
           #@has_value_field ? data["value"] : send(@default_component)
         end
