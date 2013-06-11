@@ -26,8 +26,9 @@ module Wonkavision
                                         :percent=>lambda {|v,f,opts|
                                           "#{precision_format(opts,1)}%%" % (v.to_f*100.0)},
                                         :yes_no=>lambda {|v,f,opts| v ? "Yes" : "No"},
-                                        :human_number => lambda{|v,f,opts| human_number(v)},
-                                        :human_money => lambda{|v,f,opts| human_money(v)}
+                                        :human_number => lambda{|v,f,opts| human_number(v,opts)},
+                                        :human_money => lambda{|v,f,opts| human_money(v,opts)},
+                                        :duration => lambda{|v,f,opts| duration(v,opts)}
                                         )
       end
 
@@ -42,7 +43,7 @@ module Wonkavision
         "#{pre_symbol}#{( precision_format % val ).gsub(/(\d)(?=(?:\d{3})+(?:$|\.))/,"\\1#{thousands}")}#{post_symbol}"
       end
 
-      def human_number(val)
+      def human_number(val, opts)
         val = val.to_f
 
         val, sym = if val.abs < 1000
@@ -52,11 +53,19 @@ module Wonkavision
         else
           [val/1000000,"M"]
         end
-        "#{(precision_format(:precision=>1) % val)}#{sym}"
+        "#{(precision_format(opts,1) % val)}#{sym}"
       end
 
-      def human_money(val)
-        "$#{human_number(val)}"
+      def human_money(val, opts)
+        "$#{human_number(val, opts)}"
+      end
+
+      def duration(val, opts)
+        multiplier = opts[:multiplier] || 1
+        units = opts[:units] || 1
+        format = opts[:format] || :short
+        val = val.to_i * multiplier
+        ChronicDuration.output(val, :format=>format, :units=>units)
       end
 
     end
