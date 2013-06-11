@@ -52,7 +52,7 @@ module Wonkavision
         else
           [val/1000000,"M"]
         end
-        "#{number_with_precision(val,:precision=>1)}#{sym}"
+        "#{(precision_format(:precision=>1) % val)}#{sym}"
       end
 
       def human_money(val)
