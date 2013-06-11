@@ -170,7 +170,12 @@ module Wonkavision
 
           if sort_key = cube_dimension.dimension.sort
             sort = dimtable[sort_key]
-            sql.project(sort.minimum.as("#{cube_dimension.name}__sort")) if group
+            if group
+              sql.project(sort.minimum.as("#{cube_dimension.name}__sort"))
+              sql.order(sort.minimum)
+            else
+              sql.order(sort)
+            end
           end if project
         end
 
