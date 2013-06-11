@@ -25,7 +25,9 @@ module Wonkavision
                                           to_currency(v, '$', ',', '.', precision_format(opts,2))},
                                         :percent=>lambda {|v,f,opts|
                                           "#{precision_format(opts,1)}%%" % (v.to_f*100.0)},
-                                        :yes_no=>lambda {|v,f,opts| v ? "Yes" : "No"}
+                                        :yes_no=>lambda {|v,f,opts| v ? "Yes" : "No"},
+                                        :human_number => lambda{|v,f,opts| human_number(v)},
+                                        :human_money => lambda{|v,f,opts| human_money(v)}
                                         )
       end
 
@@ -38,6 +40,23 @@ module Wonkavision
 
       def to_currency( val, pre_symbol='$', thousands=',', decimal='.', precision_format='%.2f', post_symbol=nil )
         "#{pre_symbol}#{( precision_format % val ).gsub(/(\d)(?=(?:\d{3})+(?:$|\.))/,"\\1#{thousands}")}#{post_symbol}"
+      end
+
+      def human_number(val)
+        val = val.to_f
+
+        val, sym = if val.abs < 1000
+          [val,""]
+        elsif val.abs < 1000000
+          [val/1000,"K"]
+        else
+          [val/1000000,"M"]
+        end
+        "#{number_with_precision(val,:precision=>1)}#{sym}"
+      end
+
+      def human_money(val)
+        "$#{human_number(val)}"
       end
 
     end
