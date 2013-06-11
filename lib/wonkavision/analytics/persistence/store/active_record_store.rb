@@ -1,5 +1,3 @@
-
-
 module Wonkavision
   module Analytics
     module Persistence
@@ -64,7 +62,11 @@ module Wonkavision
                          concat(query.referenced_facts.map{|f|cube.linked_cubes[f]}).uniq.compact
 
 
-          selected_measures = query.selected_measures.map{|m|cube.measures[m]}
+          #include all measures in the SQL so calcs will have
+          #required source measures to work with. When serializing for
+          #transport over the network only selected measures
+          #will be included.
+          selected_measures = cube.measures.values.reject{|m|m.calculated?}
 
           sql = sql_query(table(cube))
 

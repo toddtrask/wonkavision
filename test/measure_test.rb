@@ -36,4 +36,19 @@ class MeasureTest < ActiveSupport::TestCase
     end
 
   end
+
+  context "Calculated Measure" do
+    setup do
+      @cube = RevenueAnalytics.cubes[:transport]
+      @m = Wonkavision::Analytics::Schema::Measure.new(@cube, :measure, :calculation=>proc{length/2})
+    end
+
+    should "id itself as calculated" do
+      assert_equal true, @m.calculated?
+    end
+
+    should "execute the calculation based on the context" do
+      assert_equal 4/2, @m.calculate!(["hi","ho","hum","ha"])
+    end
+  end
 end

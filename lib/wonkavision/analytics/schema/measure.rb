@@ -2,16 +2,34 @@ module Wonkavision
   module Analytics
     module Schema
       class Measure
-        attr_reader :name, :options, :format, :cube
+        attr_reader :name, :options, :format, :cube, :calculation
 
         def initialize(cube, name,options={},&block)
           @cube = cube
           @name = name
           @format = options.delete(:format)
           @options = options
+          if options[:calculation]
+            @calculation = options[:calculation]
+          end
           if block
             block.arity == 1 ? block.call(self) : self.instance_eval(&block)
           end
+        end
+
+        def calculated?
+          !!@calculation
+        end
+
+        def calculate!(context)
+          raise "#calculate! should only be called on a calculated measure" unless calculated?
+          result = nil
+          begin
+            result = (calculation.arity == 1 ? calculation.call(context) : context.instance_eval(&calculation))
+          rescue Exception => ex
+            result = nil
+          end
+          result
         end
 
         def default_aggregation

@@ -18,7 +18,7 @@ class CellSetTest < ActiveSupport::TestCase
         @query.from :test
         @query.select :size, :shape, :on => :columns
         @query.select :color, :on => :rows
-        @query.measures :cost, :weight
+        @query.measures :cost, :weight, :weight_cost
         @query.validate!(@schema)
         @cellset = CellSet.new @schema, @query, @@test_data
       end
@@ -43,7 +43,7 @@ class CellSetTest < ActiveSupport::TestCase
           end
 
           should "maintain a list of measure names used" do
-            assert_equal [], [:cost,:weight] - @cellset.selected_measures
+            assert_equal [], ["cost","weight","weight_cost"] - @cellset.selected_measures
           end
 
          
@@ -188,7 +188,7 @@ class CellSetTest < ActiveSupport::TestCase
                     @schema = CellsetSchema
                     @query = Wonkavision::Analytics::Query.new
                     @query.from :test
-                    @query.measures :cost, :weight
+                    @query.measures :cost, :weight, :weight_cost
                     @query.select :size, :on => :columns
                     @query.select :shape, :color, :on => :rows
                     @query.validate!(@schema)
@@ -291,11 +291,12 @@ class CellSetTest < ActiveSupport::TestCase
               assert_equal ["large", "square", "red"], @cell.key
             end
             should "include a hash of measures" do
-              %w(cost weight).each { |measure| assert @cell.measures.keys.include?(measure)}
+              %w(cost weight).each { |measure| assert @cell.measures.keys.include?(measure), "Does not include #{measure}"}
             end
             should "provide named access to each measure" do
               assert_equal @cell.measures["cost"], @cell.cost
               assert_equal @cell.measures["weight"], @cell.weight
+              assert_equal @cell.measures["cost"].value * @cell.measures["weight"].value, @cell.weight_cost.value
             end
             # should "provide named access to calculated measures" do
             #   assert_equal @cell.cost.sum + @cell.weight.sum, @cell.cost_weight.value
@@ -306,7 +307,7 @@ class CellSetTest < ActiveSupport::TestCase
             should "be empty if all measures are empty" do
               @cell.cost.data["count"] = 0
               @cell.weight.data["count"] = 0
-              @cell.record.data["count"] = 0
+              @cell.record_count.data["count"] = 0
               assert @cell.empty?
             end
             context "#aggregate" do
@@ -367,7 +368,7 @@ class CellSetTest < ActiveSupport::TestCase
                 assert_equal [:size, :shape, :color], @hash[:dimensions]
               end
               should "include measures" do
-                assert_equal 2, @hash[:measures].length
+                assert_equal 3, @hash[:measures].length
               end
               # should "include calculated measures" do
               #   assert @hash[:measures][2][:calculated]
@@ -390,10 +391,10 @@ class CellSetTest < ActiveSupport::TestCase
             should "calculate an average" do
               assert_equal 5, @measure.average
             end
-            should "return the 'value' data point when present" do
-              measure = Wonkavision::Analytics::CellSet::Measure.new("test",{"value"=>1.2})
-              assert_equal 1.2, measure.value
-            end
+            # should "return the 'value' data point when present" do
+            #   measure = Wonkavision::Analytics::CellSet::Measure.new("test",{"value"=>1.2})
+            #   assert_equal 1.2, measure.value
+            # end
             context "#aggregate" do
               setup do
                 @measure.aggregate(@measure.data.dup)
@@ -405,13 +406,13 @@ class CellSetTest < ActiveSupport::TestCase
             end
             context "when empty" do
               should "say it is empty" do
-                assert Wonkavision::Analytics::CellSet::Measure.new(:hi,{}).empty?
+                assert Wonkavision::Analytics::CellSet::Measure.new(nil,:hi,{}).empty?
               end
               should "say it is empty when the count is 0" do
-                assert Wonkavision::Analytics::CellSet::Measure.new(:hi,{"count"=>0}).empty?
+                assert Wonkavision::Analytics::CellSet::Measure.new(nil,:hi,{"count"=>0}).empty?
               end
               should "return null for sum and average" do
-                cell = Wonkavision::Analytics::CellSet::Measure.new(:hi,
+                cell = Wonkavision::Analytics::CellSet::Measure.new(nil,:hi,
                                                                     { "count"=>0,
                                                                       "sum"=>100})
                 assert_nil cell.sum
@@ -450,12 +451,17 @@ class CellSetTest < ActiveSupport::TestCase
             context "serializable_hash" do
               setup do
                 @measure = @cellset[:large, :square, :red].weight
+                @calc = @cellset[:large, :square, :red].weight_cost
               end
               should "serialize state into a hash using default options" do
                 hash = @measure.serializable_hash
                 assert_equal "weight", hash[:name]
                 assert_equal 1.0, hash[:value]
                 assert_equal "1.00", hash[:formatted_value]                
+              end
+              should "serialize calculated measures" do
+                hash = @calc.serializable_hash
+                assert_equal 50.0, hash[:value]
               end
               should "include data and component when requested" do
                 hash = @measure.serializable_hash(:all_measure_components => true)

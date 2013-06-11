@@ -2,13 +2,13 @@ module Wonkavision
   module Analytics
     class CellSet
       class Measure
-        attr_reader :name, :data, :options, :default_component, :format, :schema
-        def initialize(name,data,measure_schema = nil)
+        attr_reader :name, :data, :options, :default_component, :format, :schema, :cell
+        def initialize(cell,name,data,measure_schema = nil)
+          @cell = cell
           @name = name
           @data = data ? data.dup : {}
           @schema = measure_schema
           @options = @schema ? @schema.options : {}
-          @has_value_field = @data.keys.include?("value")
           @default_component = @schema ? @schema.default_aggregation : :count
           @format = @schema ? @schema.format : nil
         end
@@ -45,11 +45,20 @@ module Wonkavision
         end
 
         def value
-          @has_value_field ? data["value"] : send(@default_component)
+          if calculated?
+            @schema.calculate!(self.cell)
+          else
+            send(@default_component)
+          end
+          #@has_value_field ? data["value"] : send(@default_component)
+        end
+
+        def calculated?
+          @schema && @schema.calculated?
         end
 
         def empty?
-          count.nil? || count ==0
+          (count.nil? || count ==0) && !(calculated? && value)
         end
 
         def sum; empty? ? nil : @data["sum"]; end

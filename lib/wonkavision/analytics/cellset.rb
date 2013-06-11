@@ -3,7 +3,7 @@ require "set"
 module Wonkavision
   module Analytics
     class CellSet
-      attr_reader :axes, :query, :cells, :totals, :schema, :cube
+      attr_reader :axes, :query, :cells, :totals, :schema, :cube, :selected_measures
 
       def initialize(schema,query,tuples)
         @axes = []
@@ -14,6 +14,7 @@ module Wonkavision
         @dimensions = query.selected_dimensions.map do |dimname|
           @cube.dimensions[dimname]
         end
+        @selected_measures = @query.selected_measures.map(&:to_s)
         @dimension_fields = {}
         @measure_fields = {}
 
@@ -34,8 +35,8 @@ module Wonkavision
       def chapters; axes[3]; end
       def sections; axes[4]; end
      
-      def selected_measures
-        @query.selected_measures
+      def is_measure_selected?(measure_name)
+        selected_measures.include?(measure_name.to_s)
       end
 
       def inspect
@@ -155,7 +156,7 @@ module Wonkavision
 
       def measures_from_row(record)
         measures = {}
-        selected_measures.each do |measure_name|
+        cube.measure_names.each do |measure_name|
           measure = {}
           measure_fields(measure_name, record).each do |measure_field|
             component_name = measure_field[measure_name.to_s.length+2..-1]

@@ -10,6 +10,9 @@ class CubeTest < ActiveSupport::TestCase
         sum :m2
         average :m3
         count :m4
+        calc :m5 do
+          length*2
+        end
       end
     end
 
@@ -43,6 +46,11 @@ class CubeTest < ActiveSupport::TestCase
 
     should "create and configure count measures" do
       assert_equal :count, @cube.measures[:m4].default_aggregation
+    end
+
+    should "create and configure calculated measures" do
+      assert_equal :calc, @cube.measures[:m5].default_aggregation
+      assert_equal 4*2, @cube.measures[:m5].calculate!(["a","b","c","d"])
     end
 
     should "default to a conventional key name" do

@@ -37,6 +37,9 @@ class RevenueAnalytics
     key :account_key
 
     sum :current_balance, :format=>:float, :precision=>2
+    calc :avg_balance, :format=>:float do |cell|
+      current_balance / record_count
+    end
 
     dimension :account_age_from_dos, :as => :aging_category
     dimension :primary_payer, :as => :payer
@@ -63,6 +66,10 @@ class CellsetSchema
 
     measure :weight, :default_aggregation => :average, :format => :float, :precision => 2
     measure :cost, :default_aggregation => :sum, :format => :float, :precision => 1
+    calc :weight_cost do |cell|
+      cell.weight.value * cell.cost.value
+    end
+
   end
 end
 

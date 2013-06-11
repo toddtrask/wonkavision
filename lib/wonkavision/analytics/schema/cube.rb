@@ -47,6 +47,10 @@ module Wonkavision
           measure name, options.merge(:default_aggregation=>:max), &block
         end
 
+        def calc(name, options={}, &calculation)
+          measure name, options.merge(:default_aggregation=>:calc, :calculation=>calculation)
+        end
+
         def key(key_field=nil)
           return @key unless key_field
           @key = key_field

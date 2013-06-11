@@ -11,7 +11,14 @@ module Wonkavision
           @measures = HashWithIndifferentAccess.new
           measure_data.each_pair do |measure_name,measure|
             measure_schema = cellset.cube.measures[measure_name]
-            @measures[measure_name] = Measure.new(measure_name,measure,measure_schema)
+            @measures[measure_name] = Measure.new(self, measure_name,measure,measure_schema)
+          end
+          #add in any calculated measures that may not have data represented
+          cellset.selected_measures.each do |measure_name|
+            m_schema = cellset.cube.measures[measure_name]
+            unless @measures[measure_name]
+              @measures[measure_name] = Measure.new(self, measure_name,{}, m_schema)
+            end
           end
           # calculated_measures.each_pair do |measure_name, calc|
           #   @measures[measure_name] = CalculatedMeasure.new(measure_name,self,calc)
@@ -22,12 +29,12 @@ module Wonkavision
           #ensure calculated measures are added to the measures
           #hash
           #calculated_measures.keys.each {|name|self[name]}
-          
           {
             :key => key,
             :dimensions => dimensions,
             :measures => measures.inject([]) do |output, (_ , measure)|
-              output << measure.serializable_hash(options); output
+              (output << measure.serializable_hash(options)) if cellset.is_measure_selected?(measure.name)
+              output
             end
           }
         end
@@ -35,7 +42,7 @@ module Wonkavision
         def measure_data
           measure_data = {}
           measures.each_pair do |key,value|
-            measure_data[key] = value.data
+            measure_data[key] = value.data unless value.calculated?
           end
           measure_data
         end
@@ -44,7 +51,7 @@ module Wonkavision
           measure_data.each_pair do |measure_name,measure_data|
             measure = @measures[measure_name]
             measure ? measure.aggregate(measure_data) :
-              @measures[measure_name] = Measure.new(measure_name,measure_data)
+              @measures[measure_name] = Measure.new(self,measure_name,measure_data)
           end
         end
 
@@ -54,7 +61,7 @@ module Wonkavision
 
         def [](measure_name)
           unless measures.keys.include?(measure_name.to_s)
-            Measure.new(measure_name, {})
+            Measure.new(self,measure_name, {})
           else
             measures[measure_name]
           end
