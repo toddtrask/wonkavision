@@ -16,7 +16,7 @@ module Wonkavision
           if block
             block.arity == 1 ? block.call(self) : self.instance_eval(&block)
           end
-          count(:record_count) unless @measures[:record_count]
+          count(:record_count, :format=>:integer) unless @measures[:record_count]
         end
 
         def dimension(name, options={}, &block)
