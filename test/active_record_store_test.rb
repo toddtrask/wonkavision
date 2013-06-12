@@ -72,7 +72,9 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           should "join selected dimensions" do
             assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_aging_category" && join.left.right.to_s == "account_age_from_dos"}, "account age"
             assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_payer" && join.left.right.to_s == "primary_payer_type"}, "primary_payer_type"
-            assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_payer" && join.left.right.to_s == "primary_payer"}, "primary_payer"
+            #joins are not duplicated - since payer uses the same dimension table and keys as payer_type, a new join is not needed
+            #this is not just optimization, it changes the results if the joined table has more than one record per fact table key
+            #assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_payer" && join.left.right.to_s == "primary_payer"}, "primary_payer"
           end
           should "join slicer dimensions" do
             assert @sql.join_sources.detect{|join|join.left.left.name.to_s == "dim_division" && join.left.right.to_s == "division"}, "division"
