@@ -72,8 +72,8 @@ module Wonkavision
               sqltable = Arel::Table.new(table_name, store.class.arel_engine)
               sqltable = table_alias.blank? ? sqltable : sqltable.alias(table_alias)
               if pkey && fkey
-                pkey_node = root_table[pkey]
-                fkey_node = sqltable[fkey]
+                pkey_node = sqltable[pkey]
+                fkey_node = root_table[fkey]
                 sql.join(sqltable).on(
                   fkey_node.eq pkey_node
                 )
