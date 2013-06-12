@@ -4,7 +4,7 @@ module Wonkavision
       class ActiveRecordStore
         class QueryBuilder
 
-          attr_reader :store, :query, :cube, :options, :sql, :group
+          attr_reader :store, :query, :cube, :options, :sql, :group, :root_table
           def initialize(store,query,cube,options)
             @store = store
             @query = query
@@ -13,7 +13,8 @@ module Wonkavision
             @tables = {}
             @group_by = {}
             @order_by = {}
-            @sql = sql_query(cube_table(cube))
+            @root_table = cube_table(cube) 
+            @sql = root_table.from(root_table)
             @group = options[:group] == false ? false : true
           end
 
@@ -71,7 +72,7 @@ module Wonkavision
               sqltable = Arel::Table.new(table_name, store.class.arel_engine)
               sqltable = table_alias.blank? ? sqltable : sqltable.alias(table_alias)
               if pkey && fkey
-                pkey_node = sqltable[pkey]
+                pkey_node = root_table[pkey]
                 fkey_node = sqltable[fkey]
                 sql.join(sqltable).on(
                   fkey_node.eq pkey_node
@@ -79,10 +80,6 @@ module Wonkavision
               end
               sqltable
             end
-          end
-
-          def sql_query(table)
-            table.from(table)
           end
           
           def apply_filter(filter)
