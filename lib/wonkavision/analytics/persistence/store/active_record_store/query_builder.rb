@@ -109,7 +109,7 @@ module Wonkavision
             }
             subq = QueryBuilder.new(store,query,cube,options)
             top[:filters].each{|f|subq.apply_filter(f)}
-            subsql = subq.execute.take(top.count)
+            subsql = subq.execute.take(top[:count])
             order_by_expr = if cubem = cube.measures[top[:measure]]
               "#{cubem.default_aggregation}(#{cubem.name})"
             else
@@ -120,7 +120,7 @@ module Wonkavision
             subsql.project("dense_rank() OVER(ORDER BY #{order_by_expr} DESC) as rank")
             subsql = Arel::Nodes::SqlLiteral.new("INNER JOIN(#{subsql.to_sql}) as topfilter on topfilter.#{cubedim.foreign_key} = #{cube.table_name}.#{cubedim.foreign_key}")
             sql.join(subsql)
-            sql.project("topfilter.rank as topfilter_rank").order("topfilter.rank")
+            sql.project("topfilter.rank as #{cubedim.name}__rank")
             sql.group("topfilter.rank") if group
           end
 
