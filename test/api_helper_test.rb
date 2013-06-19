@@ -18,7 +18,12 @@ class ApiHelperTest < ActiveSupport::TestCase
         "measures" => ["k","l"],
         "filters" => [:dimensions.a.caption.eq(2).to_s, :measures.k.ne("b").to_s].join("|"),
         "attributes" => [:dimensions.a.key.to_s, :measures.k.to_s],
-        "order" => [:dimensions.b.key.asc.to_s, :measures.c.asc.to_s]
+        "order" => [:dimensions.b.key.asc.to_s, :measures.c.asc.to_s],
+        "top_filter_count" => 5.to_s,
+        "top_filter_dimension" => "tcd",
+        "top_filter_measure" => "tcm",
+        "top_filter_exclude" => "tce1|tce2",
+        "top_filter_filters" => [:dimensions.tcf1.eq(1).to_s,:dimensions.tcf2.eq(2).to_s].join("|")
       }
       @query = @helper.query_from_params(@params)
 
@@ -73,6 +78,27 @@ class ApiHelperTest < ActiveSupport::TestCase
       assert_equal 2, @query.order.length
       @query.order.each do |s|
         assert s.kind_of?(Wonkavision::Analytics::MemberReference)
+      end
+    end
+
+    context "top filter" do
+      should "extract top filter" do
+        assert !@query.top_filter.blank?
+      end
+      should "extract count" do
+        assert_equal 5, @query.top_filter[:count]
+      end
+      should "extract dimension" do
+        assert_equal :tcd, @query.top_filter[:dimension]
+      end
+      should "extract the measure" do
+        assert_equal "tcm", @query.top_filter[:measure]
+      end
+      should "extract excludes" do
+        assert_equal [:tce1, :tce2], @query.top_filter[:exclude]
+      end
+      should "extract filters" do
+        assert_equal [:dimensions.tcf1.eq(1),:dimensions.tcf2.eq(2)], @query.top_filter[:filters]
       end
     end
   end

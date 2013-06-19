@@ -33,6 +33,11 @@ module Wonkavision
         query.attributes *parse_refs(params["attributes"])
         query.order *parse_refs(params["order"])
 
+        count,dimension,options = *parse_top_filter(params)
+        if count > 0 && dimension
+          query.top count, dimension, options
+        end
+
         query
       end
 
@@ -58,6 +63,16 @@ module Wonkavision
       def parse_filters(filters_string)
         filters = parse_list(filters_string) || []
         filters.map{ |f| Wonkavision::Analytics::MemberFilter.parse(f) }
+      end
+
+      def parse_top_filter(params)
+        count = params["top_filter_count"].to_i
+        dimension = params["top_filter_dimension"]
+        options = {}
+        options[:by] = params["top_filter_measure"] if params["top_filter_measure"]
+        options[:exclude] = parse_list(params["top_filter_exclude"])
+        options[:filters] = parse_filters(params["top_filter_filters"])
+        [count,dimension,options]
       end
 
       def parse_refs(refs_string)

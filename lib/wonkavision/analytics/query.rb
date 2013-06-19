@@ -55,12 +55,14 @@ module Wonkavision
       end
 
       def top(num, dimension, options={})
+        filters = options[:filters].map{|f|to_filter(f)} if options[:filters]
+        filters ||= (options[:where] || {}).map{|f,v| to_filter(f,v)}
         @top_filter = {
           :count => num,
           :dimension => dimension.to_sym,
           :measure => options[:by] || options[:measure],
           :exclude => [options[:exclude]].flatten.compact.map{|d|d.to_sym},
-          :filters => (options[:where] || {}).map{|f,v| to_filter(f,v)}
+          :filters => filters
         }
       end
 
@@ -154,10 +156,10 @@ module Wonkavision
         ref_or_string.kind_of?(MemberReference) ? ref_or_string : MemberReference.new(ref_or_string, :member_type => default_type)
       end
 
-      def to_filter(filter_or_string, value)
+      def to_filter(filter_or_string, value = nil)
         return nil unless filter_or_string.present?
         filter = filter_or_string.kind_of?(MemberFilter) ? filter_or_string : MemberFilter.new(filter_or_string)
-        filter.value = value  
+        filter.value = value unless value.blank?
         filter
       end
 
