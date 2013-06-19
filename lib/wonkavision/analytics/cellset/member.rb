@@ -17,7 +17,7 @@ module Wonkavision
         end
 
         def sort
-          sort = attributes["sort"] || caption
+          sort = attributes["rank"] || attributes["sort"] || caption
           sort.is_numeric? ? sort.to_f : sort
         end
 
@@ -42,6 +42,7 @@ module Wonkavision
           #wire. Client logic should be use fall back to the key
           #if either the caption or sort are nil
           hash[:caption] = caption unless caption == key
+          hash[:sort] = sort unless sort == caption
           hash[:attributes] = attributes if options[:include_member_attributes]
           hash
         end
