@@ -1,15 +1,19 @@
 module Wonkavision
   module Analytics
     class Query
-      attr_reader :axes, :measures, :attributes, :order
+      attr_reader :axes, :measures, :attributes, :order, :top_filter
 
-      def initialize()
+      def initialize(&block)
         @axes = []
         @filters = []
         @measures = []
         @order = []
         @attributes =[]
         @from = nil
+        @top_filter = nil
+        if block
+            block.arity == 1 ? block.call(self) : self.instance_eval(&block)
+        end
       end
 
       def from(cube_name=nil)
@@ -37,7 +41,7 @@ module Wonkavision
       def order(*attributes)
         return @order unless attributes.length > 0
         attributes.each do |order|
-          @order << (order.kind_of?(MemberReference) ? order : MemberReference.new(order))
+          @order << to_ref(order)
         end
         self
       end
@@ -45,16 +49,24 @@ module Wonkavision
       def attributes(*attributes)
         return @attributes unless attributes.length > 0
         attributes.each do |attribute|
-          @attributes << (attribute.kind_of?(MemberReference) ? attribute : MemberReference.new(attribute))
+          @attributes << to_ref(attribute)
         end
         self
       end
 
+      def top(num, dimension, options={})
+        @top_filter = {
+          :count => num,
+          :dimension => dimension.to_sym,
+          :measure => options[:by] || options[:measure],
+          :exclude => [options[:exclude]].flatten.compact.map{|d|d.to_sym},
+          :filters => (options[:where] || {}).map{|f,v| to_filter(f,v)}
+        }
+      end
+
       def where(criteria_hash = {})
         criteria_hash.each_pair do |filter,value|
-          member_filter = filter.kind_of?(MemberFilter) ? filter :
-            MemberFilter.new(filter)
-          member_filter.value = value
+          member_filter = to_filter(filter, value)
           add_filter(member_filter)
         end
         self
@@ -135,6 +147,18 @@ module Wonkavision
       private
       def unique_list(list = [])
         list.compact.map(&:to_sym).uniq
+      end
+
+      def to_ref(ref_or_string, default_type = :dimension)
+        return nil unless ref_or_string.present?
+        ref_or_string.kind_of?(MemberReference) ? ref_or_string : MemberReference.new(ref_or_string, :member_type => default_type)
+      end
+
+      def to_filter(filter_or_string, value)
+        return nil unless filter_or_string.present?
+        filter = filter_or_string.kind_of?(MemberFilter) ? filter_or_string : MemberFilter.new(filter_or_string)
+        filter.value = value  
+        filter
       end
 
     end

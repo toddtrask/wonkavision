@@ -147,6 +147,24 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
         end
       end
+      context "top_count" do
+        setup do
+          @query = Wonkavision::Analytics::Query.new
+          @query.from(:transport)
+          @query.columns :primary_payer, :primary_payer_type
+          @query.rows :division
+          @query.where :division => 1, :primary_payer => 2
+          @query.top 5, :primary_payer, :exclude=>:division, :by => :current_balance, :where => {
+            :provider=>3
+          } 
+        end
+        should "not break" do
+          #yeah I know shitty testing. This stuff is hard to test though :( Verified SQL by hand. Doesn't help
+          #during future refactorings though.
+          @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
+          #puts @sql.to_sql
+        end
+      end
 
     end
   end

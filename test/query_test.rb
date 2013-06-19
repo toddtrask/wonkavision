@@ -99,6 +99,45 @@ class QueryTest < ActiveSupport::TestCase
 
     end
 
+    context "#top" do
+      context "defaults" do
+        setup do
+          @query.top 5, :dim
+        end
+        should "set the count" do
+          assert_equal 5, @query.top_filter[:count]
+        end
+        should "set the dimension" do
+          assert_equal :dim, @query.top_filter[:dimension]
+        end
+        should "have a nil measure" do
+          assert_equal nil, @query.top_filter[:measure]
+        end
+        should "have an empty exclude" do
+          assert_equal [], @query.top_filter[:exclude]
+        end
+        should "have no filters" do
+          assert_equal [], @query.top_filter[:filters]
+        end
+      end
+      context "fully loaded" do
+        setup do
+          @query.top 5, "dim", :by => :a_measure, :exclude=>"a_dimension", :where => {
+            :a => 1, :dimensions.b.gt => 2
+          }
+        end
+        should "set the measure" do
+          assert_equal :a_measure, @query.top_filter[:measure] 
+        end
+        should "set the exclude" do
+          assert_equal [:a_dimension], @query.top_filter[:exclude]
+        end
+        should "set the filtesr" do
+          assert_equal [:dimensions.a.eq(1), :dimensions.b.gt(2)], @query.top_filter[:filters]
+        end
+      end
+    end
+
     context "#slicer" do
       setup do
         @query.select :a, :b

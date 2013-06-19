@@ -4,7 +4,9 @@ module Wonkavision
       class ActiveRecordStore
         class QueryBuilder
 
-          attr_reader :store, :query, :cube, :options, :sql, :group, :root_table
+          attr_reader :store, :query, :cube, :options, :sql, :group, :project, :root_table
+          attr_reader :excluded_dimensions, :skip_top_filter
+
           def initialize(store,query,cube,options)
             @store = store
             @query = query
@@ -16,6 +18,9 @@ module Wonkavision
             @root_table = cube_table(cube) 
             @sql = root_table.from(root_table)
             @group = options[:group] == false ? false : true
+            @project = options[:project] == false ? false : true
+            @skip_top_filter = !!options[:skip_top_filter]
+            @excluded_dimensions = [options[:excluded_dimensions]].flatten.uniq.compact.flatten.map(&:to_sym)
           end
 
           def execute()
@@ -35,10 +40,10 @@ module Wonkavision
 
             linked_cubes.each{|link|join_linked_cube(link)}
             
-            selected_dims.each{|d|join_dimension(d, true)}
-            slicer_dims.each{|d|join_dimension(d, false, false)}
-            selected_measures.each{|m| project_measure(m) }
-            sql.project(Arel.sql('*').count.as('record_count__count')) if group
+            selected_dims.each{|d|join_dimension(d)}
+            #slicer_dims.each{|d|join_dimension(d, false, false)}
+            selected_measures.each{|m| project_measure(m) } if project
+            sql.project(Arel.sql('*').count.as('record_count__count')) if group && project
             
             query.filters.each do |f|
               apply_filter(f)
@@ -51,6 +56,8 @@ module Wonkavision
             query.order.each do |o|
               order_by_attribute(o)
             end
+
+            apply_top_filter
 
             sql
           end
@@ -83,10 +90,40 @@ module Wonkavision
           end
           
           def apply_filter(filter)
+            return if filter.dimension? && excluded_dimensions.include?(filter.name.to_sym)
+            
             filter_attr = table_attr_from_reference(filter, cube)
             arel_op = filter_op_to_arel_op(filter.operator)
             sql.where(filter_attr.send(arel_op, filter.value))
           end
+
+          def apply_top_filter
+            return if skip_top_filter || query.top_filter.blank?
+            top = query.top_filter
+            cubedim = cube.dimensions[top[:dimension]]
+            options = {
+              :excluded_dimensions => [cubedim.name] + [top[:exclude]].flatten,
+              :project => false,
+              :group => group,
+              :skip_top_filter => true
+            }
+            subq = QueryBuilder.new(store,query,cube,options)
+            top[:filters].each{|f|subq.apply_filter(f)}
+            subsql = subq.execute.take(top.count)
+            order_by_expr = if cubem = cube.measures[top[:measure]]
+              "#{cubem.default_aggregation}(#{cubem.name})"
+            else
+              "COUNT(*)"
+            end
+            fkey_node = subq.root_table[cubedim.foreign_key]
+            subsql.project(fkey_node).group(fkey_node)
+            subsql.project("dense_rank() OVER(ORDER BY #{order_by_expr} DESC) as rank")
+            subsql = Arel::Nodes::SqlLiteral.new("INNER JOIN(#{subsql.to_sql}) as topfilter on topfilter.#{cubedim.foreign_key} = #{cube.table_name}.#{cubedim.foreign_key}")
+            sql.join(subsql)
+            sql.project("topfilter.rank as topfilter_rank").order("topfilter.rank")
+            sql.group("topfilter.rank") if group
+          end
+
 
           def project_attribute(attribute)
             member_attr = table_attr_from_reference(attribute, cube)
@@ -122,7 +159,9 @@ module Wonkavision
             cube_table(linked_cube, linked_cube.key, link.foreign_key)
           end
 
-          def join_dimension(cube_dimension, project, group = @group)
+          def join_dimension(cube_dimension, project = @project, group = @group)
+            return if excluded_dimensions.include?(cube_dimension.name)
+
             cubetable = cube_table(cube_dimension.source_cube)
             dimtable = dim_table(cube_dimension)
             
@@ -135,7 +174,7 @@ module Wonkavision
             ) if project
             group_by(dimkey, caption) if group
 
-            if sort_key = cube_dimension.dimension.sort
+            if (sort_key = cube_dimension.dimension.sort) && project
               sort = dimtable[sort_key]
               if group
                 sql.project(sort.minimum.as("#{cube_dimension.name}__sort"))
@@ -143,7 +182,7 @@ module Wonkavision
                 sql.project(sort.as("#{cube_dimension.name}__sort"))
                 sql.order(sort)
               end
-            end if project
+            end
           end
 
           def group_by(*group_fields)
