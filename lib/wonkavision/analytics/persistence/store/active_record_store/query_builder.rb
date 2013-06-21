@@ -63,24 +63,35 @@ module Wonkavision
           end
 
           def cube_table(cube, pkey=nil, fkey=nil)
-            arel_table(cube.table_name, pkey, fkey)
+            arel_table cube.table_name, :pkey => pkey, :fkey => fkey
           end
 
           def dim_table(cube_dim)
             table_name = cube_dim.dimension.source_dimension.table_name
             pkey = cube_dim.primary_key
             fkey = cube_dim.foreign_key
-            arel_table(table_name,pkey,fkey,cube_dim.name)
+
+            arel_table table_name, :pkey => pkey,
+                                   :fkey => fkey,
+                                   :table_alias => cube_dim.name,
+                                   :cube => cube_dim.source_cube
           end
 
-          def arel_table(table_name, pkey=nil, fkey=nil, table_alias=nil)
-            cache_key = [table_name, pkey, fkey]
+          def arel_table(table_name, opts = {})
+            pkey = opts[:pkey]
+            fkey = opts[:fkey]
+            table_alias = opts[:table_alias]
+            source_cube = opts[:cube] || self.cube
+
+            cache_key = [table_name, cube.name, pkey, fkey]
+            
             @tables[cache_key] ||= begin
+              jointarget = (source_cube == cube) ? root_table : cube_table(source_cube)
               sqltable = Arel::Table.new(table_name, store.class.arel_engine)
               sqltable = table_alias.blank? ? sqltable : sqltable.alias(table_alias)
               if pkey && fkey
                 pkey_node = sqltable[pkey]
-                fkey_node = root_table[fkey]
+                fkey_node = jointarget[fkey]
                 sql.join(sqltable).on(
                   fkey_node.eq pkey_node
                 )

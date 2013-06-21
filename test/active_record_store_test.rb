@@ -145,6 +145,8 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
         end
         should "not break" do
           @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
+          expected = "SELECT \"payer\".\"payer_source_key\" AS payer__key, \"payer\".\"payer_name\" AS payer__caption, MIN(\"payer\".\"payer_name\") AS payer__sort, \"division\".\"division_key\" AS division__key, \"division\".\"division_name\" AS division__caption, \"provider\".\"provider_key\" AS provider__key, \"provider\".\"provider_name\" AS provider__caption, COUNT(\"fact_denial\".\"denial_balance\") AS denial_balance__count, SUM(\"fact_denial\".\"denial_balance\") AS denial_balance__sum, MIN(\"fact_denial\".\"denial_balance\") AS denial_balance__min, MAX(\"fact_denial\".\"denial_balance\") AS denial_balance__max, COUNT(*) AS record_count__count FROM \"fact_denial\" INNER JOIN \"fact_transport\" ON \"fact_denial\".\"account_key\" = \"fact_transport\".\"account_key\" INNER JOIN \"dim_payer\" \"payer\" ON \"fact_denial\".\"payer_key\" = \"payer\".\"payer_key\" INNER JOIN \"dim_division\" \"division\" ON \"fact_transport\".\"division_key\" = \"division\".\"division_key\" INNER JOIN \"dim_provider\" \"provider\" ON \"fact_transport\".\"provider_key\" = \"provider\".\"provider_key\" WHERE \"division\".\"division_key\" = 1 AND \"provider\".\"provider_name\" = 'REACH' AND \"fact_denial\".\"denial_balance\" > 0 AND \"fact_transport\".\"current_balance\" > 0 GROUP BY \"payer\".\"payer_source_key\", \"payer\".\"payer_name\", \"division\".\"division_key\", \"division\".\"division_name\", \"provider\".\"provider_key\", \"provider\".\"provider_name\""
+          assert_equal expected, @sql.to_sql
         end
       end
       context "top_count" do
