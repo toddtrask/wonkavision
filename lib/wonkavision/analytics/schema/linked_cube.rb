@@ -2,7 +2,7 @@ module Wonkavision
   module Analytics
     module Schema
       class LinkedCube
-        attr_reader :cube, :name, :linked_cube_name, :foreign_key, :options
+        attr_reader :cube, :name, :linked_cube_name, :options
 
         def initialize(cube, linked_cube_name, options={},&block)
           @cube = cube
@@ -10,6 +10,7 @@ module Wonkavision
           @linked_cube_name = linked_cube_name
           @options = options
           @foreign_key = options[:foreign_key]
+          @join_on = options[:join_on]
 
           if block
             block.arity == 1 ? block.call(self) : self.instance_eval(&block)
@@ -38,6 +39,13 @@ module Wonkavision
           @linked_cube_name = linked_cube_name
         end
 
+        def join_on(join_hash = nil)
+          if join_hash
+            @join_on = join_hash
+          else
+            @join_on ||= {foreign_key => linked_cube.key}
+          end
+        end
       end
     end
   end

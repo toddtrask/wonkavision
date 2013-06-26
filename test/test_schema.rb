@@ -33,6 +33,13 @@ class RevenueAnalytics
     dimension :provider, :through => :transport
   end
 
+  cube :account_state do
+    link_to :transport, :join_on => {:provider_key => :provider_key, :account_call_number => :account_call_number}
+    link_to :transport, :as => :transport2, :foreign_key =>:account_key
+    dimension :provider
+    dimension :division, :through => :transport
+  end
+
   cube :transport do
     key :account_key
 

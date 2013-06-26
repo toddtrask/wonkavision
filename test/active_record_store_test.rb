@@ -149,6 +149,20 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           assert_equal expected, @sql.to_sql
         end
       end
+      context "linked cubes with multi-column joins" do
+        setup do
+          @query = Wonkavision::Analytics::Query.new
+          @query.from(:account_state)
+          @query.columns :division, :provider
+          @query.where :division => 1, :facts.transport.current_balance.gt => 0
+          @query.validate!(RevenueAnalytics)
+        end
+        should "not break" do
+          @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
+          expected = "SELECT \"division\".\"division_key\" AS division__key, \"division\".\"division_name\" AS division__caption, \"provider\".\"provider_key\" AS provider__key, \"provider\".\"provider_name\" AS provider__caption, COUNT(*) AS record_count__count FROM \"fact_account_state\" INNER JOIN \"fact_transport\" ON \"fact_account_state\".\"provider_key\" = \"fact_transport\".\"provider_key\" AND \"fact_account_state\".\"account_call_number\" = \"fact_transport\".\"account_call_number\" INNER JOIN \"dim_division\" \"division\" ON \"fact_transport\".\"division_key\" = \"division\".\"division_key\" INNER JOIN \"dim_provider\" \"provider\" ON \"fact_account_state\".\"provider_key\" = \"provider\".\"provider_key\" WHERE \"division\".\"division_key\" = 1 AND \"fact_transport\".\"current_balance\" > 0 GROUP BY \"division\".\"division_key\", \"division\".\"division_name\", \"provider\".\"provider_key\", \"provider\".\"provider_name\""
+          assert_equal expected, @sql.to_sql
+        end
+      end
       context "top_count" do
         setup do
           @query = Wonkavision::Analytics::Query.new

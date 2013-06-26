@@ -62,6 +62,12 @@ module Wonkavision
             sql
           end
 
+          def linked_cube_table(link)
+            cube = link.linked_cube
+            join_on = link.join_on
+            arel_table cube.table_name, :join_on => join_on
+          end
+
           def cube_table(cube, pkey=nil, fkey=nil)
             arel_table cube.table_name, :pkey => pkey, :fkey => fkey
           end
@@ -80,21 +86,26 @@ module Wonkavision
           def arel_table(table_name, opts = {})
             pkey = opts[:pkey]
             fkey = opts[:fkey]
+            join_on = opts[:join_on]
+            join_on = {fkey => pkey} if join_on.nil? && pkey && fkey
             table_alias = opts[:table_alias]
             source_cube = opts[:cube] || self.cube
 
-            cache_key = [table_name, cube.name, pkey, fkey]
+            cache_key = [table_name, cube.name, join_on]
             
             @tables[cache_key] ||= begin
               jointarget = (source_cube == cube) ? root_table : cube_table(source_cube)
               sqltable = Arel::Table.new(table_name, store.class.arel_engine)
               sqltable = table_alias.blank? ? sqltable : sqltable.alias(table_alias)
-              if pkey && fkey
-                pkey_node = sqltable[pkey]
-                fkey_node = jointarget[fkey]
-                sql.join(sqltable).on(
+              if join_on
+                join_criteria = join_on.map do |fkey,pkey|
+                  pkey_node = sqltable[pkey]
+                  fkey_node = jointarget[fkey]
                   fkey_node.eq pkey_node
-                )
+                end
+                onclause = join_criteria.shift
+                join_criteria.each{|c|onclause = onclause.and(c)}
+                sql.join(sqltable).on(onclause)
               end
               sqltable
             end
@@ -165,9 +176,7 @@ module Wonkavision
           end
 
           def join_linked_cube(link)
-            cubetable = cube_table(link.cube)
-            linked_cube = link.linked_cube
-            cube_table(linked_cube, linked_cube.key, link.foreign_key)
+            linked_cube_table(link)
           end
 
           def join_dimension(cube_dimension, project = @project, group = @group)
