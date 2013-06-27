@@ -40,6 +40,10 @@ module Wonkavision
 
             linked_cubes.each{|link|join_linked_cube(link)}
             
+            query.order.each do |o|
+              order_by_attribute(o)
+            end
+
             selected_dims.each{|d|join_dimension(d)}
             selected_measures.each{|m| project_measure(m) } if project
             sql.project(Arel.sql('*').count.as('record_count__count')) if group && project
@@ -50,10 +54,6 @@ module Wonkavision
 
             query.attributes.each do |a|
               project_attribute(a)
-            end
-
-            query.order.each do |o|
-              order_by_attribute(o)
             end
 
             apply_top_filter
