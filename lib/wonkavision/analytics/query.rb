@@ -95,15 +95,22 @@ module Wonkavision
       end
 
       def referenced_dimensions
-        unique_list( [] + selected_dimensions.map{|s|s} + slicer.map{|f|f.name} )
+        unique_list(
+            [] +
+            selected_dimensions.map{|s|s} +
+            slicer.map{|f|f.name} + 
+            attributes.select{|a|a.dimension?}.map{|a|a.name} 
+        )
       end
 
       def referenced_facts
         unique_list(
           order.select{|a|a.fact?}.map(&:name) + 
-          attributes.select{|a|a.fact?}.map(&:name)
+          attributes.select{|a|a.fact?}.map(&:name) +
+          filters.select{|f|f.fact?}.map(&:name)
         ) - [from.to_sym]
       end
+
 
       def selected_dimensions
         dimensions = []

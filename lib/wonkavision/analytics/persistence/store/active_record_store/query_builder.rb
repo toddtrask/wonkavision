@@ -26,10 +26,10 @@ module Wonkavision
           def execute()
             referenced_dims = query.referenced_dimensions.map{|d|cube.dimensions[d]}  
             selected_dims = query.selected_dimensions.map{|d|cube.dimensions[d]}
-            slicer_dims = query.slicer_dimensions.map{|d|cube.dimensions[d]}
 
             linked_cubes = referenced_dims.select(&:has_linked_cube?).map{|d|d.linked_cube}.
-                           concat(query.referenced_facts.map{|f|cube.linked_cubes[f]}).uniq.compact
+                           concat(query.referenced_facts.map{|f|cube.linked_cubes[f]}).
+                           uniq.compact
 
 
             #include all measures in the SQL so calcs will have
@@ -41,7 +41,6 @@ module Wonkavision
             linked_cubes.each{|link|join_linked_cube(link)}
             
             selected_dims.each{|d|join_dimension(d)}
-            #slicer_dims.each{|d|join_dimension(d, false, false)}
             selected_measures.each{|m| project_measure(m) } if project
             sql.project(Arel.sql('*').count.as('record_count__count')) if group && project
             
