@@ -130,16 +130,22 @@ module Wonkavision
             }
             subq = QueryBuilder.new(store,query,cube,options)
             top[:filters].each{|f|subq.apply_filter(f)}
+            subq.join_dimension(cubedim, false, false, true)
+
             subsql = subq.execute.take(top[:count])
             order_by_expr = if cubem = cube.measures[top[:measure]]
               "#{cubem.default_aggregation}(#{cubem.name})"
             else
               "COUNT(*)"
             end
-            fkey_node = subq.root_table[cubedim.foreign_key]
+
+            subqdimtable = subq.dim_table(cubedim)
+            dimtable = dim_table(cubedim)
+
+            fkey_node = subqdimtable[cubedim.dimension.key]
             subsql.project(fkey_node).group(fkey_node)
             subsql.project("dense_rank() OVER(ORDER BY #{order_by_expr} DESC) as rank")
-            subsql = Arel::Nodes::SqlLiteral.new("INNER JOIN(#{subsql.to_sql}) as topfilter on topfilter.#{cubedim.foreign_key} = #{cube.table_name}.#{cubedim.foreign_key}")
+            subsql = Arel::Nodes::SqlLiteral.new("INNER JOIN(#{subsql.to_sql}) as topfilter on topfilter.#{cubedim.dimension.key} = #{dimtable.name}.#{cubedim.dimension.key}")
             sql.join(subsql)
             sql.project("topfilter.rank as #{cubedim.name}__rank")
             sql.group("topfilter.rank") if group
@@ -178,8 +184,8 @@ module Wonkavision
             linked_cube_table(link)
           end
 
-          def join_dimension(cube_dimension, project = @project, group = @group)
-            return if excluded_dimensions.include?(cube_dimension.name)
+          def join_dimension(cube_dimension, project = @project, group = @group, bypassExclusions = false)
+            return if excluded_dimensions.include?(cube_dimension.name) && !bypassExclusions
 
             cubetable = cube_table(cube_dimension.source_cube)
             dimtable = dim_table(cube_dimension)
