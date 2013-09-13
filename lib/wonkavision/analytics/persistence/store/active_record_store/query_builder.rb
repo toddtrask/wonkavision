@@ -129,8 +129,8 @@ module Wonkavision
               :skip_top_filter => true
             }
             subq = QueryBuilder.new(store,query,cube,options)
-            top[:filters].each{|f|subq.apply_filter(f)}
             subq.join_dimension(cubedim, false, false, true)
+            top[:filters].each{|f|subq.apply_filter(f)}
 
             subsql = subq.execute.take(top[:count])
             order_by_expr = if cubem = cube.measures[top[:measure]]
