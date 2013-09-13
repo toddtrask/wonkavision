@@ -110,8 +110,8 @@ module Wonkavision
             end
           end
           
-          def apply_filter(filter)
-            return if filter.dimension? && excluded_dimensions.include?(filter.name.to_sym)
+          def apply_filter(filter, bypassExclusions = false)
+            return if filter.dimension? && excluded_dimensions.include?(filter.name.to_sym) && !bypassExclusions
             
             filter_attr = table_attr_from_reference(filter, cube)
             arel_op = filter_op_to_arel_op(filter.operator)
@@ -130,7 +130,7 @@ module Wonkavision
             }
             subq = QueryBuilder.new(store,query,cube,options)
             subq.join_dimension(cubedim, false, false, true)
-            top[:filters].each{|f|subq.apply_filter(f)}
+            top[:filters].each{|f|subq.apply_filter(f, true)}
 
             subsql = subq.execute.take(top[:count])
             order_by_expr = if cubem = cube.measures[top[:measure]]
