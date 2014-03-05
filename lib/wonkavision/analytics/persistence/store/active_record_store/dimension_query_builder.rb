@@ -50,6 +50,7 @@ module Wonkavision
 
           def project_attribute(attribute)
             member_attr = table_attr_from_reference(attribute)
+            member_attr = member_attr.as("#{attribute.name}__#{attribute.attribute_name}") if attribute.dimension?
             sql.project(member_attr)
           end
 

@@ -185,6 +185,7 @@ class ActiveRecordStoreTest < Test::Unit::TestCase
         setup do
           @query = Wonkavision::Analytics::DimensionQuery.new
           @query.from(:provider)
+          @query.attributes :dimensions.provider.key, :dimensions.provider.provider_name
           @query.where :dimensions.provider.provider_name.in => ["a","b"], :provider=>1
           @query.order :dimensions.provider.key.desc
         end
@@ -192,7 +193,7 @@ class ActiveRecordStoreTest < Test::Unit::TestCase
           #yeah I know shitty testing. This stuff is hard to test though :( Verified SQL by hand. Doesn't help
           #during future refactorings though.
           @sql = @store.send(:create_sql_query, @query, @store.schema.dimensions[@query.from], {})
-          assert_equal 'SELECT * FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC', @sql.to_sql
+          assert_equal 'SELECT "dim_provider"."provider_key" AS provider__key, "dim_provider"."provider_name" AS provider__provider_name FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC', @sql.to_sql
         end
       end
 
