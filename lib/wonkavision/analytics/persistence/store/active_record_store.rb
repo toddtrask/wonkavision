@@ -12,7 +12,11 @@ module Wonkavision
               config_or_model < ActiveRecord::Base
               @db = config_or_model
             else
-              @db = Class.new(ActiveRecord::Base)
+              @db = Class.new(ActiveRecord::Base) do
+                def self.name
+                  "ActiveRecordStoreTestHelper"
+                end
+              end
               @db.establish_connection(config_or_model)
             end
             @arel_engine = Arel::Sql::Engine.new(@db)
@@ -39,6 +43,12 @@ module Wonkavision
           connection.execute(sql.to_sql)
         end
 
+        def execute_dimension_query(query,options={})
+          dimension = schema.dimensions[query.from]
+          sql = create_sql_query(query, dimension, options)
+          connection.execute(sql.to_sql)
+        end
+
         def facts_for(query, options = {})
           cube = schema.cubes[query.from]
           sql = create_sql_query(query, cube, options.merge(:group => false))
@@ -49,8 +59,14 @@ module Wonkavision
           data
         end
 
-        def create_sql_query(query,cube,options)
-          QueryBuilder.new(self,query,cube,options).execute()
+        def create_sql_query(query,datasource,options)
+          #query may be of type Query or DimensionQuery
+          #datasource may be of type Cube or Dimension, depending on the type of query
+          if query.kind_of?(DimensionQuery)
+            DimensionQueryBuilder.new(self,query,datasource,options).execute()
+          else
+            QueryBuilder.new(self,query,datasource,options).execute()
+          end
         end
 
         def paginate(sql, options)

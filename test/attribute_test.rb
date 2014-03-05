@@ -1,6 +1,6 @@
 require "test_helper"
 
-class AttributeTest < ActiveSupport::TestCase
+class AttributeTest < Test::Unit::TestCase
   context "Attribute" do
     setup do
       @attribute = Wonkavision::Analytics::Schema::Attribute.new(:dimension, :my_attribute,:an_option=>true)

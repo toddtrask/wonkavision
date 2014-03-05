@@ -1,8 +1,8 @@
 require "test_helper"
 require "wonkavision/api/helper"
 
-class ApiHelperTest < ActiveSupport::TestCase
-  setup do
+class ApiHelperTest < Test::Unit::TestCase
+  def setup
     @helper = Wonkavision::Api::Helper.new(RevenueAnalytics)
   end
 
@@ -103,14 +103,73 @@ class ApiHelperTest < ActiveSupport::TestCase
     end
   end
 
+  context "dimension_query_from_params" do
+    setup do
+      @params = {
+        "from" => "provider",
+        "filters" => [:dimensions.provider.caption.eq(2).to_s].join("|"),
+        "attributes" => [:dimensions.provider.key.to_s, :dimensions.provider.provider_name.to_s],
+        "order" => [:dimensions.provider.key.asc.to_s, :dimensions.provider.sumthin.desc.to_s],
+      }
+      @query = @helper.dimension_query_from_params(@params)
+    end
+
+    should "set select the dimension using the from param" do
+      assert_equal :provider, @query.from
+    end
+    
+    should "extract each filter" do
+      assert_equal 1, @query.filters.length
+    end
+
+    should "convert strings to MemberFitler" do
+      @query.filters.each do |f|
+        assert f.kind_of?(Wonkavision::Analytics::MemberFilter)
+      end
+    end
+
+    should "properly parse each filter" do
+      assert_equal :dimension, @query.filters[0].member_type
+      assert_equal :eq, @query.filters[0].operator
+      assert_equal 2, @query.filters[0].value
+      assert_equal 'caption', @query.filters[0].attribute_name
+    end
+
+    should "extract attributes" do
+      assert_equal 2, @query.attributes.length
+      @query.attributes.each do |f|
+        assert f.kind_of?(Wonkavision::Analytics::MemberReference)
+      end
+    end
+
+    should "extract sorts" do
+      assert_equal 2, @query.order.length
+      @query.order.each do |s|
+        assert s.kind_of?(Wonkavision::Analytics::MemberReference)
+      end
+    end
+
+  end
+
   context "execute_query" do
     setup do
-      cs = stub(:serializable_hash => :hash)
+      cs = {}
+      cs.expects(:serializable_hash).returns(:hash)
       @helper.expects(:query_from_params).with({:from=>"transport"}).returns(:hi)
       RevenueAnalytics.expects(:execute_query).with(:hi).returns(cs)
     end
     should "prepare and execute the query defined in the params" do
       assert_equal :hash, @helper.execute_query({:from=>"transport"})
+    end
+  end
+
+  context "execute_dimension_query" do
+    setup do
+      @helper.expects(:dimension_query_from_params).with({:from=>"provider"}).returns(:hi)
+      RevenueAnalytics.expects(:execute_dimension_query).with(:hi).returns(:data)
+    end
+    should "prepare and execute the query defined in the params" do
+      assert_equal :data, @helper.execute_dimension_query({:from=>"provider"})
     end
   end
 

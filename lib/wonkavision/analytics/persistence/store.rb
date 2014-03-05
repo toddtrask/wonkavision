@@ -37,18 +37,14 @@ module Wonkavision
           raise NotImplementedError
         end
 
+        def execute_dimension_query(dimension_query)
+          raise NotImplementedError
+        end
+
         def facts_for(query,options={})
           raise NotImplementedError
         end
        
-        def where(query)
-          raise NotImplementedError
-        end
-
-        def each(query, &block)
-          raise NotImplementedError
-        end
-      
       end
     end
   end

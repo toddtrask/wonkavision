@@ -3,9 +3,9 @@ require "rubygems"
 require 'bundler'
 Bundler.setup
 
-require 'active_support/test_case'
-require "shoulda"
-require "mocha"
+require "test/unit"
+require "mocha/test_unit"
+require "shoulda-context"
 
 
 dir = File.dirname(__FILE__)

@@ -1,6 +1,6 @@
 require "test_helper"
 
-class SymbolTest < ActiveSupport::TestCase
+class SymbolTest < Test::Unit::TestCase
   context "Symbol extensions" do
     setup do
       @symbol = :member

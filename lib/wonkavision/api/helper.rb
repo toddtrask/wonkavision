@@ -41,9 +41,30 @@ module Wonkavision
         query
       end
 
+      def dimension_query_from_params(params)
+        query = Wonkavision::Analytics::DimensionQuery.new
+        query.from  params["from"]
+        #filters
+        filters = parse_filters(params["filters"])
+        filters.each do |member_filter|
+          query.add_filter member_filter
+        end
+
+        query.attributes *parse_refs(params["attributes"])
+        query.order *parse_refs(params["order"])
+
+        query
+      end
+
+
       def execute_query(params)
         query = query_from_params(params)
         schema.execute_query(query).serializable_hash
+      end
+
+      def execute_dimension_query(params)
+        query = dimension_query_from_params(params)
+        schema.execute_dimension_query(query)
       end
 
       def facts_for(params)

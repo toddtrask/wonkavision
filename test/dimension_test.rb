@@ -1,7 +1,7 @@
 require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
-class DimensionTest < ActiveSupport::TestCase
+class DimensionTest < Test::Unit::TestCase
 
   Dimension = Wonkavision::Analytics::Schema::Dimension
 

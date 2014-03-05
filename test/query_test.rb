@@ -1,6 +1,6 @@
 require "test_helper"
 
-class QueryTest < ActiveSupport::TestCase
+class QueryTest < Test::Unit::TestCase
   Query = Wonkavision::Analytics::Query
 
   context "Query" do

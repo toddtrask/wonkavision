@@ -1,10 +1,10 @@
 require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
-class SchemaTest < ActiveSupport::TestCase
+class SchemaTest < Test::Unit::TestCase
   context "Schema" do
     setup do
-      
+      RevenueAnalytics.unstub(:execute_query)
     end
 
     should "maintain a list of defined dimensions" do
@@ -32,7 +32,6 @@ class SchemaTest < ActiveSupport::TestCase
         @query.rows :primary_payer_type, :primary_payer
         @query.measures :current_balance
         @query.where :division => 1, :provider.caption => 'REACH', :measures.current_balance.gt => 0
-
         RevenueAnalytics.store.expects(:execute_query).with(@query).returns(@test_data)
       end
       should "execute the query and return a cellset" do

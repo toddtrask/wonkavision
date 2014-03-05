@@ -26,6 +26,7 @@ dir = File.dirname(__FILE__)
  "analytics/cellset/measure",
  "analytics/cellset",
  "analytics/query",
+ "analytics/dimension_query",
  "analytics/schema.rb",
  "analytics/schema/attribute.rb",
  "analytics/schema/linked_cube.rb",
@@ -34,7 +35,8 @@ dir = File.dirname(__FILE__)
  "analytics/schema/dimension.rb",
  "analytics/schema/measure.rb",
  "analytics/persistence/store/active_record_store.rb",
- "analytics/persistence/store/active_record_store/query_builder.rb"
+ "analytics/persistence/store/active_record_store/query_builder.rb",
+ "analytics/persistence/store/active_record_store/dimension_query_builder.rb"
  
  
 ].each {|lib|require File.join(dir,'wonkavision',lib)}

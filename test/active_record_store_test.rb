@@ -1,6 +1,6 @@
 require "test_helper"
 
-class ActiveRecordStoreTest < ActiveSupport::TestCase
+class ActiveRecordStoreTest < Test::Unit::TestCase
   ActiveRecordStore = Wonkavision::Analytics::Persistence::ActiveRecordStore
 
   context "ActiveRecordStore" do
@@ -179,6 +179,20 @@ class ActiveRecordStoreTest < ActiveSupport::TestCase
           #during future refactorings though.
           @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
           #puts @sql.to_sql
+        end
+      end
+       context "execute_dimension_query" do
+        setup do
+          @query = Wonkavision::Analytics::DimensionQuery.new
+          @query.from(:provider)
+          @query.where :dimensions.provider.provider_name.in => ["a","b"], :provider=>1
+          @query.order :dimensions.provider.key.desc
+        end
+        should "not break" do
+          #yeah I know shitty testing. This stuff is hard to test though :( Verified SQL by hand. Doesn't help
+          #during future refactorings though.
+          @sql = @store.send(:create_sql_query, @query, @store.schema.dimensions[@query.from], {})
+          assert_equal 'SELECT * FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC', @sql.to_sql
         end
       end
 

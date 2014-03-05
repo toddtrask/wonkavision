@@ -5,7 +5,7 @@ gemspec
 
 group :test do
   gem 'rake'
-  gem 'shoulda','~> 2.11'
+  gem 'shoulda-context'
   gem 'mocha'
   gem 'sqlite3'
 end

@@ -2,7 +2,7 @@ require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
 
-class CellSetTest < ActiveSupport::TestCase
+class CellSetTest < Test::Unit::TestCase
   Query = Wonkavision::Analytics::Query
   CellSet = Wonkavision::Analytics::CellSet
 

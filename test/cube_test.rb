@@ -1,7 +1,7 @@
 require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
-class CubeTest < ActiveSupport::TestCase
+class CubeTest < Test::Unit::TestCase
   context "Cube" do
     setup do
       @cube = Wonkavision::Analytics::Schema::Cube.new(RevenueAnalytics, :acube, :hi=>:ho) do

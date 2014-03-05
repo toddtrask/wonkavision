@@ -2,7 +2,7 @@ require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
 
-class MeasureTest < ActiveSupport::TestCase
+class MeasureTest < Test::Unit::TestCase
   context "Measure" do
     setup do
       @cube = RevenueAnalytics.cubes[:transport]

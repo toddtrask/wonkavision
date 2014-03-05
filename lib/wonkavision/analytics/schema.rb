@@ -30,6 +30,13 @@ module Wonkavision
           options[:raw] ? tuples : Wonkavision::Analytics::CellSet.new(self, query, tuples)
         end
 
+        
+        def execute_dimension_query(query, options = {})
+          query.validate!(self)
+          data = store.execute_dimension_query(query)
+          data
+        end
+
         def facts_for(query, options = {})
           query.validate!(self)
           store.facts_for(query, options)
