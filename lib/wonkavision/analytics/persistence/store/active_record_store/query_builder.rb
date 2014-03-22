@@ -167,7 +167,7 @@ module Wonkavision
             #record count is a special measure
             return if measure.name.to_s == "record_count" && measure.default_aggregation.to_s == "count"
             table = cube_table(measure.cube)
-            mattr = table[measure.name]
+            mattr = table[measure.field_name]
             if group
               sql.project(
                 mattr.count.as("#{measure.name}__count"),

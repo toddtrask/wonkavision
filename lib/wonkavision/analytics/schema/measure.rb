@@ -2,11 +2,12 @@ module Wonkavision
   module Analytics
     module Schema
       class Measure
-        attr_reader :name, :options, :format, :cube, :calculation
+        attr_reader :name, :options, :format, :cube, :calculation, :field_name
 
         def initialize(cube, name,options={},&block)
           @cube = cube
           @name = name
+          @field_name = options[:field_name] || name
           @format = options.delete(:format)
           @options = options
           if options[:calculation]
