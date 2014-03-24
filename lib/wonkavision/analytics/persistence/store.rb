@@ -44,6 +44,10 @@ module Wonkavision
         def facts_for(query,options={})
           raise NotImplementedError
         end
+
+        def execute_raw_query(query)
+          raise NotImplementedError
+        end
        
       end
     end

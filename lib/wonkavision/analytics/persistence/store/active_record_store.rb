@@ -43,6 +43,10 @@ module Wonkavision
           connection.execute(sql.to_sql)
         end
 
+        def execute_raw_query(query, options={})
+          connection.execute(query.to_s)
+        end
+
         def execute_dimension_query(query,options={})
           dimension = schema.dimensions[query.from]
           sql = create_sql_query(query, dimension, options)
