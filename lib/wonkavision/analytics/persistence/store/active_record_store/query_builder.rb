@@ -135,7 +135,7 @@ module Wonkavision
             #subsql.join_dimension(cubedim, false, false, true)
 
             order_by_expr = if cubem = cube.measures[top[:measure]]
-              "#{cubem.default_aggregation}(#{cubem.name})"
+              "#{cubem.default_aggregation}(#{cubem.field_name})"
             else
               "COUNT(*)"
             end
