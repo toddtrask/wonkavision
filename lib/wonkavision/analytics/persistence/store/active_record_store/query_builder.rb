@@ -123,16 +123,17 @@ module Wonkavision
             top = query.top_filter
             cubedim = cube.dimensions[top[:dimension]]
             options = {
-              :excluded_dimensions => [cubedim.name] + [top[:exclude]].flatten,
+              :excluded_dimensions => [top[:exclude]].flatten,
               :project => false,
               :group => group,
               :skip_top_filter => true
             }
             subq = QueryBuilder.new(store,query,cube,options)
-            subq.join_dimension(cubedim, false, false, true)
             top[:filters].each{|f|subq.apply_filter(f, true)}
 
             subsql = subq.execute.take(top[:count])
+            #subsql.join_dimension(cubedim, false, false, true)
+
             order_by_expr = if cubem = cube.measures[top[:measure]]
               "#{cubem.default_aggregation}(#{cubem.name})"
             else
