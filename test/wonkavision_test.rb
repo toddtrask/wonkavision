@@ -1,6 +1,6 @@
 require "test_helper"
 
-class WonkavisionTest < Test::Unit::TestCase
+class WonkavisionSmokeTest < WonkavisionTest
 
   context "Jumping into an experimental teleportation device built by a madman" do
     should "wreak some kind of humerous havoc" do

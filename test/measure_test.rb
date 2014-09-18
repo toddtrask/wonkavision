@@ -2,7 +2,7 @@ require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
 
-class MeasureTest < Test::Unit::TestCase
+class MeasureTest < WonkavisionTest
   context "Measure" do
     setup do
       @cube = RevenueAnalytics.cubes[:transport]

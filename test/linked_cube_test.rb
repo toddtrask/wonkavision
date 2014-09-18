@@ -2,7 +2,7 @@ require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
 
-class LinkedCubeTest < Test::Unit::TestCase
+class LinkedCubeTest < WonkavisionTest
   context "LinkedCube" do
     setup do
       @cube = RevenueAnalytics.cubes[:account_state]

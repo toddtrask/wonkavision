@@ -1,6 +1,6 @@
 require "test_helper"
 
-class DimensionQueryTest < Test::Unit::TestCase
+class DimensionQueryTest < WonkavisionTest
   DimensionQuery = Wonkavision::Analytics::DimensionQuery
 
   context "Query" do
@@ -34,16 +34,16 @@ class DimensionQueryTest < Test::Unit::TestCase
         @query.validate!(RevenueAnalytics)
       end
       should "fail unless from is specified" do
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail without a valid from" do
         @query.from :not_a_dimension
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail if an invalid dimension filter is specified" do
         @query.from :division
         @query.where :dimensions.provider.gt => 1
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
     
 

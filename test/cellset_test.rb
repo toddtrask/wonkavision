@@ -2,7 +2,7 @@ require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
 
-class CellSetTest < Test::Unit::TestCase
+class CellSetTest < WonkavisionTest
   Query = Wonkavision::Analytics::Query
   CellSet = Wonkavision::Analytics::CellSet
 
@@ -51,7 +51,7 @@ class CellSetTest < Test::Unit::TestCase
         context "#[]" do
           should "locate a cell based on its coordinates, specified in query order" do
             cell = @cellset[:large, :square, :red]
-            assert_not_nil cell
+            refute_nil cell
             assert_equal ["large", "square", "red"], cell.key
             assert_equal 10, cell.cost.count
           end
@@ -159,7 +159,7 @@ class CellSetTest < Test::Unit::TestCase
                 @cell = @axis[:large,:circle]
               end
               should "locate a totals cell for the given coordinates" do
-                assert_not_nil @cell
+                refute_nil @cell
                 assert @cell.empty? == false
               end
               should "locate a cell with an abbreviated key matching just the axis coords" do

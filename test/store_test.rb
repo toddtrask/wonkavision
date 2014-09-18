@@ -1,6 +1,6 @@
 require "test_helper"
 
-class StoreTest < Test::Unit::TestCase
+class StoreTest < WonkavisionTest
   Store = Wonkavision::Analytics::Persistence::Store
 
   context "Store" do

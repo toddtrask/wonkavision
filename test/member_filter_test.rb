@@ -1,7 +1,7 @@
 require "test_helper"
 require "cgi"
 
-class MemberFilterTest < Test::Unit::TestCase
+class MemberFilterTest < WonkavisionTest
   context "MemberFilter" do
     setup do
       @dimension = Wonkavision::Analytics::MemberFilter.new(:a_dim,   :member_type=>:dimension)

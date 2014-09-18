@@ -1,6 +1,6 @@
 require "test_helper"
 
-class SymbolTest < Test::Unit::TestCase
+class SymbolTest < WonkavisionTest
   context "Symbol extensions" do
     setup do
       @symbol = :member

@@ -1,6 +1,6 @@
 require "test_helper"
 
-class QueryTest < Test::Unit::TestCase
+class QueryTest < WonkavisionTest
   Query = Wonkavision::Analytics::Query
 
   context "Query" do
@@ -163,50 +163,50 @@ class QueryTest < Test::Unit::TestCase
       should "fail unless from is specified" do
         @query.columns :division
         @query.measures :current_balance
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail without a valid from" do
         @query.from :not_a_cube
         @query.columns :division
         @query.measures :current_balance
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail if axes are selected out of order" do
         @query.from :transport
         @query.rows :row
         @query.measures :current_balance
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail if an invalid measure is specified" do
         @query.from :transport
         @query.columns :division
         @query.measures :tada
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail if no dimension is specified" do
         @query.from :transport
         @query.measures :current_balance
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail if an invalid dimension is specified" do
         @query.from :transport
         @query.measures :current_balance
         @query.columns :not_a_dimension
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail if an invalid dimension filter is specified" do
         @query.from :transport
         @query.measures :current_balance
         @query.columns :division
         @query.where :dimensions.not_a_dimension.gt => 1
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
       should "fail if an invalid measure filter is specified" do
         @query.from :transport
         @query.measures :current_balance
         @query.columns :division
         @query.where :measures.not_a_measure.gt => 1
-        assert_raise(RuntimeError){@query.validate!(RevenueAnalytics)}
+        assert_raises(RuntimeError){@query.validate!(RevenueAnalytics)}
       end
 
     end

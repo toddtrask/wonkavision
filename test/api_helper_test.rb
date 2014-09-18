@@ -1,7 +1,7 @@
 require "test_helper"
 require "wonkavision/api/helper"
 
-class ApiHelperTest < Test::Unit::TestCase
+class ApiHelperTest < WonkavisionTest
   def setup
     @helper = Wonkavision::Api::Helper.new(RevenueAnalytics)
   end

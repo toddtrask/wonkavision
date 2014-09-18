@@ -8,4 +8,5 @@ group :test do
   gem 'shoulda-context'
   gem 'mocha'
   gem 'sqlite3'
+  gem 'minitest_should', :git=>'https://github.com/citrus/minitest_should.git'
 end

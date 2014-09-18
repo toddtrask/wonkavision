@@ -1,6 +1,6 @@
 require "test_helper"
 
-class ActiveRecordStoreTest < Test::Unit::TestCase
+class ActiveRecordStoreTest < WonkavisionTest
   ActiveRecordStore = Wonkavision::Analytics::Persistence::ActiveRecordStore
 
   context "ActiveRecordStore" do
@@ -192,7 +192,7 @@ class ActiveRecordStoreTest < Test::Unit::TestCase
         end
         should "not break" do
           @sql = @store.send(:create_sql_query, @query, @store.schema.dimensions[@query.from], {})
-          assert_equal 'SELECT "dim_provider"."provider_key" AS provider__key, "dim_provider"."provider_name" AS provider__provider_name FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC', @sql.to_sql
+          assert_equal 'SELECT "dim_provider"."provider_key" AS provider__key, "dim_provider"."provider_name" AS provider__provider_name FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC'.gsub(" ",""), @sql.to_sql.gsub(" ","")
         end
       end
       context "calculated dimensions" do

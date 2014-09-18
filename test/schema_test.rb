@@ -1,7 +1,7 @@
 require "test_helper"
 require File.join $test_dir, "test_schema.rb"
 
-class SchemaTest < Test::Unit::TestCase
+class SchemaTest < WonkavisionTest
   context "Schema" do
     setup do
       RevenueAnalytics.unstub(:execute_query)

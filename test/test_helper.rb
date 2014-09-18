@@ -3,9 +3,9 @@ require "rubygems"
 require 'bundler'
 Bundler.setup
 
-require "test/unit"
-require "mocha/test_unit"
-require "shoulda-context"
+require 'minitest/autorun'
+require 'minitest/should'
+require "mocha/mini_test"
 
 
 dir = File.dirname(__FILE__)
@@ -43,3 +43,5 @@ class StatStore < Wonkavision::Analytics::Persistence::Store
   end
 end
 
+class WonkavisionTest < Minitest::Should::TestCase
+end
