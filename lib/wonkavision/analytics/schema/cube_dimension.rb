@@ -38,6 +38,10 @@ module Wonkavision
           dimension.source_dimension.primary_key
         end
 
+        def table_name
+          dimension.table_name
+        end
+
         def attribute_key(attribute_name)
           dimension.respond_to?(attribute_name) ? dimension.send(attribute_name.to_s) :
                                                   attribute_name

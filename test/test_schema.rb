@@ -19,6 +19,24 @@ class RevenueAnalytics
     caption :payer_type
   end
 
+  dimension :payer_category do
+    derived_from :payer
+
+    calculate :payer_category_key,
+               "CASE WHEN payer_key > 100 THEN 'happy' ELSE 'sad' END"
+
+    caption :payer_category_key
+  end
+
+  dimension :payer_sexiness do
+    derived_from :payer
+
+    calculate :payer_sexiness_key,
+              "CASE WHEN payer_key < 100 THEN 'hot' ELSE 'bothered' END"
+
+    caption :payer_sexiness_key
+  end
+
   dimension :division
   dimension :provider
 
@@ -31,6 +49,8 @@ class RevenueAnalytics
     dimension :payer
     dimension :division, :through => :transport
     dimension :provider, :through => :transport
+    dimension :payer_category, :via => :payer
+    dimension :payer_sexiness, :via => :payer
   end
 
   cube :account_state do

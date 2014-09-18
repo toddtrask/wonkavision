@@ -5,7 +5,7 @@ module Wonkavision
         class QueryBuilder
 
           attr_reader :store, :query, :cube, :options, :sql, :group, :project, :root_table
-          attr_reader :excluded_dimensions, :skip_top_filter
+          attr_reader :excluded_dimensions, :skip_top_filter, :table_expressions
 
           def initialize(store,query,cube,options)
             @store = store
@@ -15,12 +15,14 @@ module Wonkavision
             @tables = {}
             @group_by = {}
             @order_by = {}
+            @table_expressions = {}
             @root_table = cube_table(cube) 
             @sql = root_table.from(root_table)
             @group = options[:group] == false ? false : true
             @project = options[:project] == false ? false : true
             @skip_top_filter = !!options[:skip_top_filter]
             @excluded_dimensions = [options[:excluded_dimensions]].flatten.uniq.compact.flatten.map(&:to_sym)
+
           end
 
           def execute()
@@ -58,7 +60,13 @@ module Wonkavision
 
             apply_top_filter
 
+            apply_table_expressions
+
             sql
+          end
+
+          def apply_table_expressions
+            sql.with(*table_expressions.values) if table_expressions.present?
           end
 
           def linked_cube_table(link)
@@ -72,14 +80,30 @@ module Wonkavision
           end
 
           def dim_table(cube_dim)
-            table_name = cube_dim.dimension.source_dimension.table_name
+            table_name = cube_dim.table_name
             pkey = cube_dim.primary_key
             fkey = cube_dim.foreign_key
 
+
+            ensure_cte(table_name, cube_dim.dimension)
             arel_table table_name, :pkey => pkey,
                                    :fkey => fkey,
                                    :table_alias => cube_dim.name,
                                    :cube => cube_dim.source_cube
+          end
+
+          def ensure_cte(table_name, dimension)
+            if (dimension.has_calculated_attributes?)
+              table_expressions[table_name] ||= begin
+                cte = arel_table(table_name)
+                source_table = arel_table(dimension.source_table_name)
+                source_table = source_table.project(Arel.sql('*'))
+                dimension.calculated_attributes.each do |calc|
+                  source_table = source_table.project(Arel.sql(calc.expression).as(calc.name.to_s))
+                end
+                Arel::Nodes::As.new(cte, source_table)
+              end
+            end
           end
 
           def arel_table(table_name, opts = {})
@@ -87,7 +111,7 @@ module Wonkavision
             fkey = opts[:fkey]
             join_on = opts[:join_on]
             join_on = {fkey => pkey} if join_on.nil? && pkey && fkey
-            table_alias = opts[:table_alias]
+            table_alias = opts[:table_alias] if opts[:table_alias].to_s != table_name.to_s
             source_cube = opts[:cube] || self.cube
 
             cache_key = [table_name, cube.name, join_on]

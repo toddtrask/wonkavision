@@ -2,11 +2,12 @@ module Wonkavision
   module Analytics
     module Schema
       class Attribute
-        attr_reader :name, :options, :dimension
+        attr_reader :name, :options, :dimension, :expression
 
         def initialize(dimension, name,options={})
           @dimension = dimension
           @name = name
+          @expression = options[:expression]
           @options = options
         end
 
@@ -16,6 +17,10 @@ module Wonkavision
 
         def schema
           dimension.schema
+        end
+
+        def calculated?
+          !!expression
         end
 
       end

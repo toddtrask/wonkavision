@@ -148,6 +148,66 @@ class DimensionTest < Test::Unit::TestCase
       
       end
 
+      context "#table_name" do
+        should "return the default table name" do
+          assert_equal "dim_hi", @dimension.table_name
+        end
+        should "return an alternative table name when set" do
+          @dimension.table_name "wakka"
+          assert_equal "wakka", @dimension.table_name
+        end
+      end
+
+      context "#is_derived" do
+        should "be false by default" do
+          assert_equal false, @dimension.is_derived?
+        end
+        should "reference itself as the source dimension" do
+          assert_equal @dimension, @dimension.source_dimension
+        end
+      end
+
+      context "derived dimensions" do
+        setup do
+          @dimension.derived_from :payer
+        end
+        should "appear as derived" do
+          assert_equal true, @dimension.is_derived?
+        end
+        should "link to the source dimension" do
+          assert_equal RevenueAnalytics.dimensions[:payer], @dimension.source_dimension
+        end
+        should "present the source dimensions table name" do
+          assert_equal "dim_payer", @dimension.table_name
+        end
+      end
+
+      context "calculated attributes" do
+        setup do
+          @dimension.calculate :calced, "current_timestamp"
+          @dimension.calculate :calced2, "get_date()"
+        end
+        should "create an attribute with appropriate expression" do
+          assert_equal("current_timestamp",@dimension.attributes[:calced].expression)
+          assert_equal("get_date()",@dimension.attributes[:calced2].expression)
+        end
+        context "#calculated_attributes" do
+          should "return calculated attributes" do
+            assert_equal 2, @dimension.calculated_attributes.length
+          end
+        end
+        context "#has_calculated_attributes" do
+          should "be true when there are calculated attributes" do
+            assert_equal true, @dimension.has_calculated_attributes?
+          end
+        end
+        context "#table_name" do
+          should "return the name of the dimension" do
+            assert_equal "hi", @dimension.table_name
+          end
+        end
+      end
+
     end
 
   end

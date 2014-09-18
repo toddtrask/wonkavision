@@ -25,7 +25,7 @@ module Wonkavision
         end
 
         def attribute(name = nil, options={}, &block)
-          @attributes[name] = Attribute.new(self, name,options,&block)
+          @attributes[name] ||= Attribute.new(self, name,options,&block)
         end
 
         def sort(sort_key = nil, options={})
@@ -52,13 +52,41 @@ module Wonkavision
         end
 
         def table_name(table_name = nil)
-          return @table_name unless table_name
-          @table_name = table_name
+          if table_name
+            @table_name = table_name
+          elsif has_calculated_attributes?
+            #this dimension will be represented by a CTE in the query
+            #which will be aliased with the dimensions name
+            @name.to_s
+          else
+            source_table_name
+          end
+        end
+
+        def source_table_name
+          is_derived? ? source_dimension.table_name : @table_name
         end
 
         def primary_key(primary_key = nil)
           return @primary_key unless primary_key
           @primary_key = primary_key
+        end
+
+        def calculate(name, expression, options={})
+          options = options.merge(:expression=>expression)
+          attribute(name,options)
+        end
+
+        def calculated_attributes
+          @attributes.values.select{|a|a.calculated?}
+        end
+
+        def has_calculated_attributes?
+          calculated_attributes.present?
+        end
+
+        def is_derived?
+          source_dimension != self
         end
 
       end

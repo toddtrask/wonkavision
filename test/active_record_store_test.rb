@@ -89,7 +89,8 @@ class ActiveRecordStoreTest < Test::Unit::TestCase
             assert @wheres.detect{|w|w.is_a?(Arel::Nodes::GreaterThan) && w.left.name.to_s == "current_balance" && w.right == 0},"current_balance=>0"
           end
           should "group by projected dimension attributes" do
-            assert_equal @projections.select{|n|n.is_a?(Arel::Nodes::As)}.length, @groups.length
+            #length - 1 because we are projecting the same attribute twice, once for key and once for caption, but do not need to group by twice
+            assert_equal @projections.select{|n|n.is_a?(Arel::Nodes::As)}.length - 1, @groups.length
           end
         end
         context "for detail data" do
@@ -190,13 +191,23 @@ class ActiveRecordStoreTest < Test::Unit::TestCase
           @query.order :dimensions.provider.key.desc
         end
         should "not break" do
-          #yeah I know shitty testing. This stuff is hard to test though :( Verified SQL by hand. Doesn't help
-          #during future refactorings though.
           @sql = @store.send(:create_sql_query, @query, @store.schema.dimensions[@query.from], {})
           assert_equal 'SELECT "dim_provider"."provider_key" AS provider__key, "dim_provider"."provider_name" AS provider__provider_name FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC', @sql.to_sql
         end
       end
-
+      context "calculated dimensions" do
+        setup do
+          @query = Wonkavision::Analytics::Query.new
+          @query.from(:denial)
+          @query.columns :payer_category
+          @query.rows :payer_sexiness
+          @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
+        end
+        should "be produce correct sql" do
+          #this is a terrible, terrible test of this functionality.
+          assert @sql.to_sql =~ /WITH.*payer_category.*payer_sexiness/i
+        end
+      end
     end
   end
 end
