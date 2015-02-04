@@ -45,6 +45,7 @@ class RevenueAnalytics
     link_to :transport, :foreign_key => :account_key
 
     sum :denial_balance
+    count :account_count, :field_name=>:account_key, :distinct => true
     
     dimension :payer
     dimension :division, :through => :transport

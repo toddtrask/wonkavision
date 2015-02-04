@@ -194,12 +194,17 @@ module Wonkavision
             table = cube_table(measure.cube)
             mattr = table[measure.field_name]
             if group
+              is_distinct_count = !!measure.options[:distinct]
               sql.project(
-                mattr.count.as("#{measure.name}__count"),
-                mattr.sum.as("#{measure.name}__sum"),
-                mattr.minimum.as("#{measure.name}__min"),
-                mattr.maximum.as("#{measure.name}__max")
+                mattr.count(is_distinct_count).as("#{measure.name}__count")
               )
+              unless is_distinct_count
+                sql.project(
+                  mattr.sum.as("#{measure.name}__sum"),
+                  mattr.minimum.as("#{measure.name}__min"),
+                  mattr.maximum.as("#{measure.name}__max")
+                )
+              end
             else
               sql.project(mattr)
             end
