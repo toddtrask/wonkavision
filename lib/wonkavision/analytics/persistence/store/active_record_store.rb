@@ -2,7 +2,7 @@ module Wonkavision
   module Analytics
     module Persistence
       class ActiveRecordStore < Store
-        
+
         class << self
 
           attr_reader :db, :arel_engine
@@ -19,7 +19,7 @@ module Wonkavision
               end
               @db.establish_connection(config_or_model)
             end
-            @arel_engine = Arel::Sql::Engine.new(@db)
+            @arel_engine = @db
           end
 
           def connection
@@ -86,7 +86,7 @@ module Wonkavision
             false
           end
         end
-   
+
       end
     end
   end

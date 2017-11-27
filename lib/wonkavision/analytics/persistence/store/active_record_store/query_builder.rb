@@ -17,7 +17,8 @@ module Wonkavision
             @order_by = {}
             @table_expressions = {}
             @root_table = cube_table(cube) 
-            @sql = root_table.from(root_table)
+            # @sql = store.class.arel_engine.from(root_table)
+            @sql = root_table.from
             @group = options[:group] == false ? false : true
             @project = options[:project] == false ? false : true
             @skip_top_filter = !!options[:skip_top_filter]
@@ -118,7 +119,7 @@ module Wonkavision
             
             @tables[cache_key] ||= begin
               jointarget = (source_cube == cube) ? root_table : cube_table(source_cube)
-              sqltable = Arel::Table.new(table_name, store.class.arel_engine)
+              sqltable = Arel::Table.new(table_name)
               sqltable = table_alias.blank? ? sqltable : sqltable.alias(table_alias)
               if join_on
                 join_criteria = join_on.map do |fkey,pkey|

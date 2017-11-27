@@ -84,9 +84,9 @@ class ActiveRecordStoreTest < WonkavisionTest
             assert @sql.join_sources.select{|join|join.left.left.name.to_s == "dim_division" && join.left.right.to_s == "division"}.length == 1, "multiple identical joins"
           end
           should "filter dimensions" do
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "division_key" && w.right == 1}, "division_key=>1"
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "provider_name" && w.right == 'REACH'}, "provider_name=>reach"
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::GreaterThan) && w.left.name.to_s == "current_balance" && w.right == 0},"current_balance=>0"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "division_key" && w.right.val == 1}, "division_key=>1"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "provider_name" && w.right.val == 'REACH'}, "provider_name=>reach"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::GreaterThan) && w.left.name.to_s == "current_balance" && w.right.val == 0},"current_balance=>0"
           end
           should "group by projected dimension attributes" do
             #length - 1 because we are projecting the same attribute twice, once for key and once for caption, but do not need to group by twice
