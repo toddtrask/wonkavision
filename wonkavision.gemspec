@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'activesupport', '>= 4.0.0'
   s.add_dependency 'activerecord', ' >= 4.0.0'
-  s.add_dependency 'arel', ' >= 8.0.0'
+  s.add_dependency 'arel', ' ~> 7.0'
   s.add_dependency 'chronic_duration', '>= 0.10.2'
   s.add_dependency 'i18n'
 end
