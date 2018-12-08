@@ -5,10 +5,11 @@ GIT
     minitest_should (0.3.2)
 
 PATH
-  remote: .
+  remote: 'https://github.com/toddtrask/wonkavision.git'
+  revision: e6cdb2e4c5a3612ba91dd32e47d3f7c00a3f2b6a
   specs:
     wonkavision (3.0.0)
-      activerecord (>= 5.2.2)
+      activerecord (~> 5.2.2)
       activesupport (~> 5.2.2)
       arel (~> 9.0)
       chronic_duration (~> 0.10.2)
