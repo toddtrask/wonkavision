@@ -2,8 +2,7 @@
 # Use `bundle exec rake` in order to run the specs using the bundle
 source "http://rubygems.org"
 ruby '2.4.2'
-gem 'activerecord', '>= 5.0.0'
-gem 'arel', '>= 9.0'
+
 gemspec
 
 group :test do
