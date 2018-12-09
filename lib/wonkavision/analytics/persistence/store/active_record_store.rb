@@ -14,7 +14,7 @@ module Wonkavision
             else
               @db = Class.new(ActiveRecord::Base) do
                 def self.name
-                  "ActiveRecordStoreTestHelper"
+                  "primary"
                 end
               end
               @db.establish_connection(config_or_model)
