@@ -12,9 +12,8 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.files = Dir.glob("{lib,test}/**/*") + %w[README.md LICENSE.txt]
 
-  s.add_dependency 'activesupport', '>= 5.0.0'
-  s.add_dependency 'activerecord', ' >= 5.0.0'
-  s.add_dependency 'arel', ' ~> 9.0'
+  s.add_dependency 'activesupport', '>= 5.2.2'
+  s.add_dependency 'activerecord', ' >= 5.2.2'
   s.add_dependency 'chronic_duration', '>= 0.10.2'
   s.add_dependency 'i18n'
 end

@@ -14,8 +14,10 @@ require File.join(dir,"..","lib","wonkavision")
 $test_dir = dir
 
 Wonkavision::Analytics::Persistence::ActiveRecordStore.connect(
-  :adapter => "sqlite3",
-  :database  => "#{$test_dir}/db"
+  adapter: "sqlite3",
+  encoding: 'unicode',
+  database: "#{$test_dir}/db",
+  pool: 5
 )
     
 class StatStore < Wonkavision::Analytics::Persistence::Store

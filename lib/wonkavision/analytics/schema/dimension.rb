@@ -14,6 +14,9 @@ module Wonkavision
           @table_name = options[:table_name] || "dim_#{name}"
           @primary_key = options[:primary_key] || "#{name}_key"
           @source_dimension = self
+          @key = nil
+          @caption = nil
+          @sort = nil
           key options[:key] if options[:key]
           sort options[:sort] if options[:sort]
           caption options[:caption] if options[:caption]

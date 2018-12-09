@@ -10,6 +10,7 @@ module Wonkavision
           @field_name = options[:field_name] || name
           @format = options.delete(:format)
           @options = options
+          @calculation = nil
           if options[:calculation]
             @calculation = options[:calculation]
           end

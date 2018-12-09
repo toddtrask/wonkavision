@@ -73,6 +73,7 @@ module Wonkavision
       private
 
       def calculate_totals(include_subtotals=false)
+        @totals = nil
         cells.keys.each do |cell_key|
           measure_data = cells[cell_key].measure_data
           append_to_subtotals(measure_data,cell_key)

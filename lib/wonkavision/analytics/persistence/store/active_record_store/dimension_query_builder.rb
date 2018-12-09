@@ -15,7 +15,7 @@ module Wonkavision
             @group_by = {}
             @order_by = {}
             @root_table = dimension_table(dimension) 
-            @sql = root_table.from(root_table)
+            @sql = root_table.from #(root_table)
           end
 
           def execute()
@@ -39,7 +39,7 @@ module Wonkavision
 
           def dimension_table(dimension)
             table_name = dimension.table_name
-            Arel::Table.new(table_name,store.class.arel_engine)
+            Arel::Table.new(table_name)
           end
 
           def apply_filter(filter)
