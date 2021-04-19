@@ -21,7 +21,7 @@ class DimensionTest < WonkavisionTest
 
       should "default the key sort and caption properties to name" do
         assert_equal "hi_key", @dimension.key.name
-        assert_equal nil, @dimension.sort
+        assert_nil @dimension.sort
         assert_equal "hi_name", @dimension.caption.name
       end
 
@@ -107,7 +107,7 @@ class DimensionTest < WonkavisionTest
         end
         should "return nil if no sort defined" do
           @dimension.sort = nil
-          assert_equal nil, @dimension.sort
+          assert_nil @dimension.sort
         end
       
       end
@@ -127,7 +127,7 @@ class DimensionTest < WonkavisionTest
         end
         should "return nil if no caption is defined" do
           @dimension.caption = nil
-          assert_equal nil, @dimension.caption
+          assert_nil @dimension.caption
         end
        
       end

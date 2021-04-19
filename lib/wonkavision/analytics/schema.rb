@@ -10,7 +10,7 @@ module Wonkavision
         class_attribute :dimensions, :instance_writer => false
         self.dimensions = HashWithIndifferentAccess.new
 
-        class_attribute :cubes, :instance_write => false
+        class_attribute :cubes, :instance_writer => false
         self.cubes = HashWithIndifferentAccess.new
       end
 

@@ -17,7 +17,7 @@ module Wonkavision
             @order_by = {}
             @table_expressions = {}
             @root_table = cube_table(cube) 
-            @sql = root_table.from(root_table)
+            @sql = root_table.from
             @group = options[:group] == false ? false : true
             @project = options[:project] == false ? false : true
             @skip_top_filter = !!options[:skip_top_filter]
@@ -118,7 +118,7 @@ module Wonkavision
             
             @tables[cache_key] ||= begin
               jointarget = (source_cube == cube) ? root_table : cube_table(source_cube)
-              sqltable = Arel::Table.new(table_name, store.class.arel_engine)
+              sqltable = Arel::Table.new(table_name)
               sqltable = table_alias.blank? ? sqltable : sqltable.alias(table_alias)
               if join_on
                 join_criteria = join_on.map do |fkey,pkey|
@@ -170,7 +170,7 @@ module Wonkavision
             fkey_node = subqdimtable[cubedim.dimension.key]
             subsql.project(fkey_node).group(fkey_node)
             subsql.project("dense_rank() OVER(ORDER BY #{order_by_expr} DESC) as rank")
-            subsql = Arel::Nodes::SqlLiteral.new("INNER JOIN(#{subsql.to_sql}) as topfilter on topfilter.#{cubedim.dimension.key} = #{dimtable.name}.#{cubedim.dimension.key}")
+            subsql = Arel::Nodes::SqlLiteral.new("INNER JOIN(#{subsql.to_sql(store)}) as topfilter on topfilter.#{cubedim.dimension.key} = #{dimtable.name}.#{cubedim.dimension.key}")
             sql.join(subsql)
             sql.project("topfilter.rank as #{cubedim.name}__rank")
             sql.group("topfilter.rank") if group
@@ -217,7 +217,7 @@ module Wonkavision
           def join_dimension(cube_dimension, project = @project, group = @group, bypassExclusions = false)
             return if excluded_dimensions.include?(cube_dimension.name) && !bypassExclusions
 
-            cubetable = cube_table(cube_dimension.source_cube)
+            cube_table(cube_dimension.source_cube)
             dimtable = dim_table(cube_dimension)
             
             dimkey = dimtable[cube_dimension.dimension.key]

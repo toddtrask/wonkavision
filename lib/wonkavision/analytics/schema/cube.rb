@@ -12,7 +12,7 @@ module Wonkavision
           @measures = HashWithIndifferentAccess.new
           @linked_cubes = HashWithIndifferentAccess.new
           @key = "#{name}_key"
-          @table_name=options[:table_name] || "fact_#{name}"
+          @table_name = options[:table_name] || "fact_#{name}"
           if block
             block.arity == 1 ? block.call(self) : self.instance_eval(&block)
           end
@@ -61,9 +61,9 @@ module Wonkavision
           @measures.keys
         end
 
-        def table_name(table_name=nil)
-          return @table_name unless table_name
-          @table_name = table_name
+        def table_name(table_name_input=nil)
+          return @table_name unless table_name_input
+          @table_name = table_name_input
         end
 
         def link_to(cube_name, options={}, &block)

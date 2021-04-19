@@ -199,7 +199,7 @@ class ApiHelperTest < WonkavisionTest
 
   context "parse_list" do
     should "should return nil if the input is blank" do
-      assert_equal nil, @helper.parse_list("")
+      assert_nil @helper.parse_list("")
     end
     should "return an array if the input is an array" do
       assert_equal [1,2,3], @helper.parse_list([1,2,3])

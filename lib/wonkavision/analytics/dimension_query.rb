@@ -19,18 +19,18 @@ module Wonkavision
         self
       end
 
-      def order(*attributes)
-        return @order unless attributes.length > 0
+      def order(*attributes_input)
+        return @order unless attributes_input.length > 0
         attributes.each do |order|
           @order << to_ref(order)
         end
         self
       end
 
-      def attributes(*attributes)
-        return @attributes unless attributes.length > 0
-        attributes.each do |attribute|
-          @attributes << to_ref(attribute)
+      def attributes(*attributes_input)
+        return @attributes unless attributes_input.length > 0
+        attributes_input.each do |attribute_item|
+          @attributes << to_ref(attribute_item)
         end
         self
       end

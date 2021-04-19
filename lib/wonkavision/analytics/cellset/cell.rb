@@ -6,6 +6,7 @@ module Wonkavision
 
         def initialize(cellset,key,dims,measure_data)
           @cellset = cellset
+          @filters_val = nil
           @key = key
           @dimensions = dims
           @measures = HashWithIndifferentAccess.new
@@ -84,14 +85,14 @@ module Wonkavision
         end
 
         def filters
-          unless @filters
-            @filters = []
+          unless @filters_val
+            @filters_val = []
             dimensions.each_with_index do |dim_name, index|
-              @filters << MemberFilter.new( dim_name, :value => key[index] )
+              @filters_val << MemberFilter.new( dim_name, :value => key[index] )
             end
-            @filters += cellset.query.filters(false)
+            @filters_val += cellset.query.filters(false)
           end
-          @filters
+          @filters_val
         end
       end
     end

@@ -1,7 +1,7 @@
 module Wonkavision
   module Analytics
     class Query
-      attr_reader :axes, :measures, :attributes, :order, :top_filter
+      attr_reader :axes, :measures, :attributes, :order, :top_filter, :filters
 
       def initialize(&block)
         @axes = []
@@ -34,22 +34,22 @@ module Wonkavision
         eval "def #{axis}(*args);args.add_options!(:axis=>#{axis.inspect});select(*args);end"
       end
 
-      def measures(*measures)
-        @measures.concat measures.flatten
+      def measures(*measures_input)
+        @measures.concat measures_input.flatten
       end
 
-      def order(*attributes)
-        return @order unless attributes.length > 0
-        attributes.each do |order|
-          @order << to_ref(order)
+      def order(*attributes_input)
+        return @order unless attributes_input.length > 0
+        attributes_input.each do |order_item|
+          @order << to_ref(order_item)
         end
         self
       end
 
-      def attributes(*attributes)
-        return @attributes unless attributes.length > 0
-        attributes.each do |attribute|
-          @attributes << to_ref(attribute)
+      def attributes(*attributes_input)
+        return @attributes unless attributes_input.length > 0
+        attributes_input.each do |attribute_item|
+          @attributes << to_ref(attribute_item)
         end
         self
       end

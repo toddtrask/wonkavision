@@ -5,6 +5,7 @@ module Wonkavision
         attr_reader :name, :options, :format, :cube, :calculation, :field_name
 
         def initialize(cube, name,options={},&block)
+          @calculation = nil
           @cube = cube
           @name = name
           @field_name = options[:field_name] || name
@@ -31,10 +32,10 @@ module Wonkavision
           options[:default_aggregation] || :sum
         end
 
-        def format(format=nil, format_options={})
-          return @format unless format
+        def format(format_input=nil, format_options={})
+          return @format unless format_input
           options.merge!(format_options)
-          @format = format
+          @format = format_input
           self
         end
 

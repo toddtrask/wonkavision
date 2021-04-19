@@ -272,7 +272,7 @@ class CellSetTest < WonkavisionTest
               should "include the caption and no key if they match" do
                 hash = @member.serializable_hash
                 assert_equal @member.key, hash[:key]
-                assert_equal nil, hash[:caption]
+                assert_nil hash[:caption]
               end             
               should "not include attributes by default" do
                 hash = @member.serializable_hash

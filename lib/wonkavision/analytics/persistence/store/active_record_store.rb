@@ -57,7 +57,7 @@ module Wonkavision
           cube = schema.cubes[query.from]
           sql = create_sql_query(query, cube, options.merge(:group => false))
           paginated =  paginate(sql, options)
-          sql_string = sql.to_sql
+          sql_string = sql.to_sql(self)
           data = connection.execute(sql_string)
           Paginated.apply(data, paginated) if paginated
           data
@@ -75,7 +75,7 @@ module Wonkavision
 
         def paginate(sql, options)
           if options[:page] || options[:per_page]
-            countsql = "select count(*) from (#{sql.to_sql}) as cnt"
+            countsql = "select count(*) from (#{sql.to_sql(self)}) as cnt"
             rcount = connection.execute(countsql).first["count"].to_i
             page = options[:page] ? options[:page].to_i : 1
             per_page = options[:per_page] ? options[:per_page].to_i : 25

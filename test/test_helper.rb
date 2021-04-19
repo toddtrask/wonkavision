@@ -5,7 +5,7 @@ Bundler.setup
 
 require 'minitest/autorun'
 require 'minitest/should'
-require "mocha/mini_test"
+require "mocha/minitest"
 
 
 dir = File.dirname(__FILE__)

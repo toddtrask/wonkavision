@@ -7,6 +7,9 @@ module Wonkavision
         attr_writer :key, :sort, :caption
 
         def initialize(schema, name,options={},&block)
+          @key = nil
+          @caption = nil
+          @sort = nil
           @schema = schema
           @name = name
           @options = options
@@ -38,9 +41,10 @@ module Wonkavision
           @caption = attribute(caption_key, options)
         end
 
-        def key(key=nil, options={})
-          return @key unless key
-          @key = attribute(key, options)
+        def key(key_input=nil, options={})
+          return @key unless key_input
+          @key = attribute(key_input, options)
+          @key
         end
 
         def derived_from(source_dimension_name=nil)
@@ -51,9 +55,9 @@ module Wonkavision
           @source_dimension
         end
 
-        def table_name(table_name = nil)
-          if table_name
-            @table_name = table_name
+        def table_name(table_name_input = nil)
+          if table_name_input
+            @table_name = table_name_input
           elsif has_calculated_attributes?
             #this dimension will be represented by a CTE in the query
             #which will be aliased with the dimensions name
@@ -67,9 +71,9 @@ module Wonkavision
           is_derived? ? source_dimension.table_name : @table_name
         end
 
-        def primary_key(primary_key = nil)
-          return @primary_key unless primary_key
-          @primary_key = primary_key
+        def primary_key(primary_key_input = nil)
+          return @primary_key unless primary_key_input
+          @primary_key = primary_key_input
         end
 
         def calculate(name, expression, options={})

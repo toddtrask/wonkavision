@@ -30,8 +30,8 @@ module Wonkavision
           query.add_filter member_filter
         end
 
-        query.attributes *parse_refs(params["attributes"])
-        query.order *parse_refs(params["order"])
+        query.attributes(*parse_refs(params["attributes"]))
+        query.order(*parse_refs(params["order"]))
 
         count,dimension,options = *parse_top_filter(params)
         if count > 0 && dimension
@@ -50,8 +50,8 @@ module Wonkavision
           query.add_filter member_filter
         end
 
-        query.attributes *parse_refs(params["attributes"])
-        query.order *parse_refs(params["order"])
+        query.attributes(*parse_refs(params["attributes"]))
+        query.order(*parse_refs(params["order"]))
 
         query
       end

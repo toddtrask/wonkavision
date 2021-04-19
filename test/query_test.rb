@@ -111,7 +111,7 @@ class QueryTest < WonkavisionTest
           assert_equal :dim, @query.top_filter[:dimension]
         end
         should "have a nil measure" do
-          assert_equal nil, @query.top_filter[:measure]
+          assert_nil @query.top_filter[:measure]
         end
         should "have an empty exclude" do
           assert_equal [], @query.top_filter[:exclude]

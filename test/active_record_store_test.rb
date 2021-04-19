@@ -84,9 +84,9 @@ class ActiveRecordStoreTest < WonkavisionTest
             assert @sql.join_sources.select{|join|join.left.left.name.to_s == "dim_division" && join.left.right.to_s == "division"}.length == 1, "multiple identical joins"
           end
           should "filter dimensions" do
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "division_key" && w.right.val == 1}, "division_key=>1"
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "provider_name" && w.right.val == 'REACH'}, "provider_name=>reach"
-            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::GreaterThan) && w.left.name.to_s == "current_balance" && w.right.val == 0},"current_balance=>0"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "division_key" && w.right.value == 1}, "division_key=>1"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::Equality) && w.left.name.to_s == "provider_name" && w.right.value == 'REACH'}, "provider_name=>reach"
+            assert @wheres.detect{|w|w.is_a?(Arel::Nodes::GreaterThan) && w.left.name.to_s == "current_balance" && w.right.value == 0},"current_balance=>0"
           end
           should "group by projected dimension attributes" do
             #length - 1 because we are projecting the same attribute twice, once for key and once for caption, but do not need to group by twice
@@ -147,7 +147,7 @@ class ActiveRecordStoreTest < WonkavisionTest
         should "not break" do
           @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
           expected = "SELECT \"payer\".\"payer_source_key\" AS payer__key, \"payer\".\"payer_name\" AS payer__caption, MIN(\"payer\".\"payer_name\") AS payer__sort, \"division\".\"division_key\" AS division__key, \"division\".\"division_name\" AS division__caption, \"provider\".\"provider_key\" AS provider__key, \"provider\".\"provider_name\" AS provider__caption, COUNT(\"fact_denial\".\"denial_balance\") AS denial_balance__count, SUM(\"fact_denial\".\"denial_balance\") AS denial_balance__sum, MIN(\"fact_denial\".\"denial_balance\") AS denial_balance__min, MAX(\"fact_denial\".\"denial_balance\") AS denial_balance__max, COUNT(DISTINCT \"fact_denial\".\"account_key\") AS account_count__count, COUNT(*) AS record_count__count FROM \"fact_denial\" INNER JOIN \"fact_transport\" ON \"fact_denial\".\"account_key\" = \"fact_transport\".\"account_key\" INNER JOIN \"dim_payer\" \"payer\" ON \"fact_denial\".\"payer_key\" = \"payer\".\"payer_key\" INNER JOIN \"dim_division\" \"division\" ON \"fact_transport\".\"division_key\" = \"division\".\"division_key\" INNER JOIN \"dim_provider\" \"provider\" ON \"fact_transport\".\"provider_key\" = \"provider\".\"provider_key\" WHERE \"division\".\"division_key\" = 1 AND \"provider\".\"provider_name\" = 'REACH' AND \"fact_denial\".\"denial_balance\" > 0 AND \"fact_transport\".\"current_balance\" > 0 GROUP BY \"payer\".\"payer_source_key\", \"payer\".\"payer_name\", \"division\".\"division_key\", \"division\".\"division_name\", \"provider\".\"provider_key\", \"provider\".\"provider_name\""
-          assert_equal expected, @sql.to_sql
+          assert_equal expected, @sql.to_sql(@store)
         end
       end
       context "linked cubes with multi-column joins" do
@@ -159,9 +159,10 @@ class ActiveRecordStoreTest < WonkavisionTest
           @query.validate!(RevenueAnalytics)
         end
         should "not break" do
+          # puts "========@store: #{@store.schema.cubes}"
           @sql = @store.send(:create_sql_query, @query, @store.schema.cubes[@query.from], {})
           expected = "SELECT \"division\".\"division_key\" AS division__key, \"division\".\"division_name\" AS division__caption, \"provider\".\"provider_key\" AS provider__key, \"provider\".\"provider_name\" AS provider__caption, COUNT(*) AS record_count__count FROM \"fact_account_state\" INNER JOIN \"fact_transport\" ON \"fact_account_state\".\"provider_key\" = \"fact_transport\".\"provider_key\" AND \"fact_account_state\".\"account_call_number\" = \"fact_transport\".\"account_call_number\" INNER JOIN \"dim_division\" \"division\" ON \"fact_transport\".\"division_key\" = \"division\".\"division_key\" INNER JOIN \"dim_provider\" \"provider\" ON \"fact_account_state\".\"provider_key\" = \"provider\".\"provider_key\" WHERE \"division\".\"division_key\" = 1 AND \"fact_transport\".\"current_balance\" > 0 GROUP BY \"division\".\"division_key\", \"division\".\"division_name\", \"provider\".\"provider_key\", \"provider\".\"provider_name\""
-          assert_equal expected, @sql.to_sql
+          assert_equal expected, @sql.to_sql(@store)
         end
       end
       context "top_count" do
@@ -192,7 +193,7 @@ class ActiveRecordStoreTest < WonkavisionTest
         end
         should "not break" do
           @sql = @store.send(:create_sql_query, @query, @store.schema.dimensions[@query.from], {})
-          assert_equal 'SELECT "dim_provider"."provider_key" AS provider__key, "dim_provider"."provider_name" AS provider__provider_name FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC'.gsub(" ",""), @sql.to_sql.gsub(" ","")
+          assert_equal 'SELECT "dim_provider"."provider_key" AS provider__key, "dim_provider"."provider_name" AS provider__provider_name FROM "dim_provider"  WHERE "dim_provider"."provider_name" IN (\'a\', \'b\') AND "dim_provider"."provider_key" = 1  ORDER BY "dim_provider"."provider_key" DESC'.gsub(" ",""), @sql.to_sql(@store).gsub(" ","")
         end
       end
       context "calculated dimensions" do
@@ -205,7 +206,7 @@ class ActiveRecordStoreTest < WonkavisionTest
         end
         should "be produce correct sql" do
           #this is a terrible, terrible test of this functionality.
-          assert @sql.to_sql =~ /WITH.*payer_category.*payer_sexiness/i
+          assert @sql.to_sql(@store) =~ /WITH.*payer_category.*payer_sexiness/i
         end
       end
     end

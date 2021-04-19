@@ -44,6 +44,7 @@ module Wonkavision
           def totals
             cell_key = Array.new(axis.start_index) + key
             cell = axis.cellset[cell_key]
+            cell
           end
 
           def descendent_count(include_empty=false)

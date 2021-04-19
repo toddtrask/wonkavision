@@ -6,6 +6,7 @@ module Wonkavision
       attr_reader :axes, :query, :cells, :totals, :schema, :cube, :selected_measures
 
       def initialize(schema,query,tuples)
+        @totals = nil
         @axes = []
         @query = query
         @schema = schema

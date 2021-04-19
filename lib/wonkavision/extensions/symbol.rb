@@ -34,7 +34,7 @@ module Wonkavision
         [:dimensions,:measures,:facts].include?(self)
       end
 
-       def _member_reference(name, options={})
+      def _member_reference(name, options={})
         options[:member_type] ||= _member_type
         if !_is_member_reference?
           member_name = self
